@@ -152,6 +152,13 @@ header.top p { color: var(--ink-2); max-width: 68ch; }
 }
 .export-btn:hover { border-color: var(--ink-3); }
 .btn-icon { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.region-pick { display: inline-flex; align-items: center; gap: 7px; }
+.region-pick select { width: auto; font-size: .82rem; padding: 6px 9px; }
+.region-note {
+  font-size: .8rem; color: var(--ink-2); background: var(--emp-soft);
+  border: 1px solid var(--emp); border-radius: 7px; padding: 8px 11px; max-width: 84ch;
+}
 .export-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .print-header { display: none; }
 .print-params { display: none; }
@@ -379,7 +386,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
     --neg: #8a2222 !important; --sal-sub: #0e6b47 !important; --shadow: none !important;
   }
   body { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-size: 11.5px; }
-  .top-row .export-btn, .tabbar, input[type=range], .lock-item #lock-sal, .tip, .mtip { display: none !important; }
+  .top-row .export-btn, .region-pick, .region-note, .hint-cta, .tabbar, input[type=range], .lock-item #lock-sal, .tip, .mtip { display: none !important; }
   .inputs { display: none !important; }
   .layout, .sal-layout { display: block !important; }
   .compare, .sched-compare, .insight-grid, .notes { grid-template-columns: 1fr !important; }
@@ -461,11 +468,22 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
   <header class="top">
     <div class="top-row">
       <span class="eyebrow">Simulador fiscal · Portugal · ano fiscal 2026</span>
-      <button type="button" id="btn-print" class="export-btn" data-vmtrc="ExportPDF" title="Abre o diálogo de impressão do navegador - escolhe &quot;Guardar como PDF&quot; no destino.">
-        <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-        <span>Exportar análise em PDF</span>
-      </button>
+      <div class="top-actions">
+        <label class="region-pick">
+          <span class="eyebrow">Região</span>
+          <select id="regiao" data-vmtrc="RegionSwitch">
+            <option value="continente" selected>Portugal continental</option>
+            <option value="acores">Região Autónoma dos Açores</option>
+            <option value="madeira">Região Autónoma da Madeira</option>
+          </select>
+        </label>
+        <button type="button" id="btn-print" class="export-btn" data-vmtrc="ExportPDF" title="Abre o diálogo de impressão do navegador - escolhe &quot;Guardar como PDF&quot; no destino.">
+          <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          <span>Exportar análise em PDF</span>
+        </button>
+      </div>
     </div>
+    <p class="region-note" id="regiao-note" hidden></p>
     <h1>Recibos verdes ou sociedade unipessoal?</h1>
     <p>Compara o lucro total que ficas a ganhar por ano em cada regime - conta pessoal <b>e</b> lucro retido na empresa (é teu na mesma, mesmo que ainda não esteja na tua conta). As despesas reais entram nas duas colunas - em recibos verdes não baixam o IRS (regime simplificado), mas saem na mesma do teu bolso.</p>
   </header>
@@ -551,6 +569,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
             <div class="field"><label for="p-irc2">IRC acima de 50 k€ %</label><input type="number" id="p-irc2" value="19" step="0.5" min="0" max="40"></div>
             <div class="field"><label for="p-der">Derrama municipal %</label><input type="number" id="p-der" value="1.5" step="0.1" min="0" max="1.5"></div>
             <div class="field"><label for="p-divr">Retenção dividendos %</label><input type="number" id="p-divr" value="28" step="0.5" min="0" max="50"></div>
+            <div class="field"><label for="p-irsred">Redução regional do IRS %</label><input type="number" id="p-irsred" value="0" step="1" min="0" max="30"></div>
             <div class="field"><label for="p-sspat">SS patronal %</label><input type="number" id="p-sspat" value="23.75" step="0.05" min="0" max="40"></div>
             <div class="field"><label for="p-sstrab">SS trabalhador %</label><input type="number" id="p-sstrab" value="11" step="0.5" min="0" max="20"></div>
           </div>
@@ -621,7 +640,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
             <li><b>Segurança Social:</b> 21,4% sobre o rendimento relevante (70% da faturação em serviços, 20% em vendas). Aproximação anual do apuramento trimestral; ignora a base mínima e o teto de 12 × IAS.</li>
             <li><b>Rendimento tributável:</b> faturação × coeficiente (art. 31.º CIRS). As despesas reais <b>não</b> entram - o coeficiente já presume uma dedução fixa.</li>
             <li><b>Dedução específica:</b> ao rendimento tributável deduz-se 4.104 € ou, se superior, a SS efetivamente paga (art. 31.º n.º 13). Muitos simuladores esquecem-na e sobrestimam o IRS.</li>
-            <li><b>IRS:</b> escalões progressivos em vigor, contribuinte solteiro sem dependentes.</li>
+            <li><b>IRS:</b> escalões progressivos em vigor, contribuinte solteiro sem dependentes. Nas regiões autónomas os escalões são os mesmos, mas as taxas levam a redução regional escolhida no topo da página.</li>
             <li><b>No bolso:</b> faturação − SS − IRS − <b>despesas reais</b>.</li>
           </ul>
         </div>
@@ -643,6 +662,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
             <li>IVA (assume-se que é neutro ou que há isenção do art. 53.º), retenções na fonte e pagamentos por conta - afetam a tesouraria, não o imposto final.</li>
             <li>Na empresa: tributações autónomas (viaturas, representação) e custos de constituição (~360 € na Empresa na Hora). <b>O lucro retido aqui é contado ao valor facial</b> - quando um dia o levantares como dividendo extra, pagas mais 28% nessa altura, o que este simulador não desconta antecipadamente.</li>
             <li>Em recibos verdes: opção pela contabilidade organizada (obrigatória acima de 200 k€), que permitiria deduzir despesas reais.</li>
+            <li><b>Regiões autónomas:</b> o seletor aplica as taxas regionais de IRC, a retenção de dividendos reduzida (19,6%) e a redução das taxas de IRS. A Segurança Social é nacional e não muda, tal como os limites isentos do subsídio de alimentação. Não estão incluídos o regime do Centro Internacional de Negócios da Madeira (ZFM, IRC de 5%) nem taxas de IRC específicas por setor de atividade, e a derrama municipal varia de concelho para concelho - confirma a do teu.</li>
           </ul>
         </div>
         <p class="disclaimer">Valores aproximados para orientação inicial. Não substitui a análise de um contabilista certificado, que deve validar o teu caso concreto (CAE, município, situação familiar, histórico de SS) antes de qualquer decisão.</p>
@@ -825,9 +845,25 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
 <script>
 (function () {
   const BR = [[8059,.1325],[12160,.165],[17233,.22],[22306,.25],[28400,.32],[41629,.355],[44987,.435],[80000,.45],[Infinity,.48]];
+
+  /* Regiões autónomas: os escalões são nacionais, mudam as taxas. IRC e taxas liberatórias
+     (art. 71.º, dividendos) levam -30%; o IRS (art. 68.º) leva a redução regional própria. */
+  const REGIOES = {
+    continente: { nome: 'Portugal continental', irsRed: 0,  irc1: 15,   irc2: 19,   divr: 28 },
+    acores:     { nome: 'Açores',               irsRed: 20, irc1: 8.75, irc2: 13.3, divr: 19.6 },
+    madeira:    { nome: 'Madeira',              irsRed: 30, irc1: 10.5, irc2: 13.3, divr: 19.6 },
+  };
+  const REGIAO_NOTA = {
+    continente: '',
+    acores: 'Açores: IRC de 8,75% (PME) e 13,3%, e retenção de dividendos a 19,6% (redução regional de 30%). A redução das taxas de IRS está a 20% - confirma o valor em vigor com o teu contabilista e ajusta em "Taxas e parâmetros avançados", porque as fontes públicas divergem entre 20% e 30%.',
+    madeira: 'Madeira: em 2026 aplica-se o diferencial máximo de 30% às taxas de IRS dos nove escalões (DLR n.º 8/2025/M), IRC de 10,5% (PME) e 13,3%, e retenção de dividendos a 19,6%. Não inclui o regime do Centro Internacional de Negócios da Madeira (ZFM), que tem IRC de 5% para entidades licenciadas.',
+  };
+  // Redução regional das taxas do art. 68.º, lida dos parâmetros; atualizada em params()/salParams().
+  let irsRed = 0;
+
   function irs(x) {
     let t = 0, lo = 0;
-    for (const [hi, r] of BR) { if (x <= lo) break; t += (Math.min(x, hi) - lo) * r; lo = hi; if (x <= hi) break; }
+    for (const [hi, r] of BR) { if (x <= lo) break; t += (Math.min(x, hi) - lo) * r * (1 - irsRed); lo = hi; if (x <= hi) break; }
     return Math.max(0, t);
   }
   const ATIV = { serv75: { coef: .75, ssBase: .70 }, serv35: { coef: .35, ssBase: .70 }, bens15: { coef: .15, ssBase: .20 } };
@@ -839,11 +875,13 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
   const num = id => parseFloat($(id).value) || 0;
 
   function params() {
+    irsRed = num('p-irsred') / 100;
     return {
       fat: num('fat'), desp: num('desp'), ativ: $('ativ').value, ssex: $('ssex').checked,
       sal: num('sal'), div: num('div') / 100, cont: num('cont'), banco: num('banco'), outros: num('outros'),
       ssti: num('p-ssti') / 100, dedb: num('p-dedb'), irc1: num('p-irc1') / 100, irc2: num('p-irc2') / 100,
       der: num('p-der') / 100, divr: num('p-divr') / 100, sspat: num('p-sspat') / 100, sstrab: num('p-sstrab') / 100,
+      irsred: irsRed,
     };
   }
 
@@ -1087,6 +1125,21 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
   }
 
   document.querySelectorAll('#tab-compare input, #tab-compare select').forEach(el => el.addEventListener('input', update));
+
+  function aplicarRegiao() {
+    const r = REGIOES[$('regiao').value] || REGIOES.continente;
+    $('p-irc1').value = r.irc1;
+    $('p-irc2').value = r.irc2;
+    $('p-divr').value = r.divr;
+    $('p-irsred').value = r.irsRed;
+    const nota = $('regiao-note');
+    nota.textContent = REGIAO_NOTA[$('regiao').value] || '';
+    nota.hidden = !nota.textContent;
+    update();
+    updateSalary();
+  }
+  $('regiao').addEventListener('change', aplicarRegiao);
+
   update();
 
   /* ============================================================
@@ -1095,8 +1148,8 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
   const eur2 = n => (Math.round(n * 100) / 100).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 
   function marginalRate(x) {
-    for (const [hi, r] of BR) if (x <= hi) return r;
-    return .48;
+    for (const [hi, r] of BR) if (x <= hi) return r * (1 - irsRed);
+    return .48 * (1 - irsRed);
   }
   function netAnnualFromGross(grossAnnual, sstrab, dedA) {
     const ssTrab = grossAnnual * sstrab;
@@ -1113,6 +1166,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
   }
 
   function salParams() {
+    irsRed = num('p-irsred') / 100;
     return {
       net: parseFloat($('sal2-net').value) || 0,
       sched: $('sal2-sched').value,
@@ -1124,6 +1178,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
       isdinheiro: parseFloat($('sal2-isdinheiro').value) || 0,
       cardcom: (parseFloat($('sal2-cardcom').value) || 0) / 100,
       cardfee: parseFloat($('sal2-cardfee').value) || 0,
+      irsred: irsRed,
       dedA: parseFloat($('sal2-deda').value) || 0,
       sstrab: (parseFloat($('sal2-sstrab').value) || 0) / 100,
       sspat: (parseFloat($('sal2-sspat').value) || 0) / 100,
@@ -1364,6 +1419,8 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
     const p = params();
     const ativLabel = $('ativ').options[$('ativ').selectedIndex].text;
     const rows = [
+      paramRow('Região', (REGIOES[$('regiao').value] || REGIOES.continente).nome),
+      paramRow('Redução regional do IRS', pct(p.irsred * 100)),
       paramRow('Faturação bruta anual', eur(p.fat)),
       paramRow('Despesas reais anuais', eur(p.desp)),
       paramRow('Tipo de atividade', ativLabel),
@@ -1390,6 +1447,8 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
     const summLabel = $('sal2-summ').options[$('sal2-summ').selectedIndex].text;
     const schedLabel = $('sal2-sched').options[$('sal2-sched').selectedIndex].text;
     const rows = [
+      paramRow('Região', (REGIOES[$('regiao').value] || REGIOES.continente).nome),
+      paramRow('Redução regional do IRS', pct(sp.irsred * 100)),
       paramRow('Líquido por pagamento mensal', eur(sp.net)),
       paramRow('Modalidade de pagamento', schedLabel),
       paramRow('Subsídio de alimentação - valor diário', eur2(sp.subd)),
@@ -1415,7 +1474,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
       `<img class="print-logo" src="sousa-dev-logo.png" alt="Sousa Dev">` +
       `<div>` +
       `<div class="t1">Simulação fiscal - ${tabName}</div>` +
-      `<div class="t2">Exportado em ${now.toLocaleDateString('pt-PT')} às ${now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })} · valores aproximados, para validação por contabilista certificado</div>` +
+      `<div class="t2">Exportado em ${now.toLocaleDateString('pt-PT')} às ${now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })} · ${(REGIOES[$('regiao').value] || REGIOES.continente).nome} · valores aproximados, para validação por contabilista certificado</div>` +
       `<div class="t3">Gerado com o simulador gratuito da Sousa Dev - recibos-empresa.sousadev.com</div>` +
       `</div></div>`;
     buildCompareParams();
