@@ -5,16 +5,55 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Simulador fiscal português: recibos verdes (regime simplificado) vs. sociedade unipessoal. Compara lucro total, simula o salário do gerente e exporta um PDF para o contabilista.">
 <meta name="author" content="Sousa Dev">
-<meta property="og:site_name" content="Sousa Dev">
+<meta name="robots" content="index, follow">
 <meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://recibos-empresa.sousadev.com/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧾</text></svg>">
+
+<title>Recibos verdes ou unipessoal? - Simulador fiscal PT</title>
+
+<!-- Open Graph / Facebook / LinkedIn -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Sousa Dev">
+<meta property="og:url" content="https://recibos-empresa.sousadev.com/">
+<meta property="og:title" content="Recibos verdes ou sociedade unipessoal? - Simulador fiscal PT">
+<meta property="og:description" content="Compara o lucro total que ficas a ganhar por ano em cada regime e exporta a análise em PDF para o contabilista. Grátis, sem registo.">
+<meta property="og:image" content="https://recibos-empresa.sousadev.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Recibos verdes ou sociedade unipessoal? Simulador fiscal gratuito, por Sousa Dev.">
+<meta property="og:locale" content="pt_PT">
+
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Recibos verdes ou sociedade unipessoal? - Simulador fiscal PT">
+<meta name="twitter:description" content="Compara o lucro total que ficas a ganhar por ano em cada regime e exporta a análise em PDF para o contabilista. Grátis, sem registo.">
+<meta name="twitter:image" content="https://recibos-empresa.sousadev.com/og-image.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Recibos verdes ou sociedade unipessoal? - Simulador fiscal PT",
+  "alternateName": "Simulador recibos verdes vs. empresa",
+  "url": "https://recibos-empresa.sousadev.com/",
+  "description": "Simulador fiscal português: recibos verdes (regime simplificado) vs. sociedade unipessoal. Compara lucro total, simula o salário do gerente e exporta um PDF para o contabilista.",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Any (web browser)",
+  "inLanguage": "pt-PT",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+  "author": { "@type": "Organization", "name": "Sousa Dev", "url": "https://sousadev.com" },
+  "publisher": { "@type": "Organization", "name": "Sousa Dev", "url": "https://sousadev.com" }
+}
+</script>
+
 <!-- Vemetric analytics (public project token; the private API key is NOT in this repo) -->
 <script>
   window.vmtrcq = window.vmtrcq || [];
   window.vmtrc = window.vmtrc || function (){window.vmtrcq.push(Array.prototype.slice.call(arguments))};
 </script>
 <script defer src="https://cdn.vemetric.com/main.js" id="vmtrc-scr" data-token="xJgulSgiWwG0T8TM"></script>
-<title>Recibos verdes ou unipessoal? — Simulador fiscal PT</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -96,9 +135,11 @@ p { margin: 0; }
   font-size: .68rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3);
 }
 a { color: var(--rv); }
-.brand-link { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--ink-3); }
-.brand-link:hover { color: var(--ink); border-bottom-color: var(--ink); }
-.brand-link:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 3px; }
+.brand-bar { display: flex; align-items: center; padding: 2px 0 14px; }
+.brand-bar-link { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-2); text-decoration: none; font-size: .82rem; font-weight: 600; letter-spacing: -.01em; }
+.brand-bar-link:hover { color: var(--ink); }
+.brand-bar-link:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+.brand-bar .brand-logo { width: 17px; height: 17px; }
 
 .wrap { max-width: 1240px; margin: 0 auto; padding: 32px 20px 64px; }
 header.top { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
@@ -107,8 +148,10 @@ header.top p { color: var(--ink-2); max-width: 68ch; }
 .export-btn {
   font: inherit; font-size: .82rem; font-weight: 500; color: var(--ink); background: var(--panel);
   border: 1px solid var(--line-strong); border-radius: 7px; padding: 7px 13px; cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 7px;
 }
 .export-btn:hover { border-color: var(--ink-3); }
+.btn-icon { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .export-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .print-header { display: none; }
 .print-params { display: none; }
@@ -135,6 +178,12 @@ header.top p { color: var(--ink-2); max-width: 68ch; }
 .field label { font-size: .86rem; font-weight: 500; color: var(--ink); }
 .field .val { font-size: .95rem; font-weight: 500; }
 .field .hint { font-size: .76rem; color: var(--ink-3); line-height: 1.4; }
+.hint-cta {
+  align-self: flex-start; font: inherit; font-size: .76rem; font-weight: 500; color: var(--emp);
+  background: var(--emp-soft); border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; text-align: left; line-height: 1.35;
+}
+.hint-cta:hover { filter: brightness(.96); }
+.hint-cta:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 input[type=range] { width: 100%; accent-color: var(--ink-2); margin: 0; cursor: pointer; }
 input[type=range]:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; border-radius: 4px; }
 select, input[type=number] {
@@ -340,7 +389,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
   .print-header .t3 { font-size: .74rem; color: #666; margin-top: 2px; }
   .print-footer { display: block !important; margin-top: 20px; padding-top: 10px; border-top: 1px solid #999; font-size: .75rem; color: #444; }
   .print-footer a { color: #1a4f8a; }
-  .brand-footer { display: none !important; }
+  .brand-footer, .brand-bar, .sticky-verdict { display: none !important; }
   .print-params { display: block !important; background: #fafafa; border: 1px solid #ccc; border-radius: 6px; padding: 12px 16px; margin-bottom: 18px; break-inside: avoid; }
   .print-params h3 { font-size: .88rem; margin-bottom: 8px; }
   .print-params table { width: 100%; border-collapse: collapse; font-size: .82rem; }
@@ -379,18 +428,43 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
 .fab:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
 .fab svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 @media (max-width: 640px) { .fab span { display: none; } .fab { padding: 12px; } }
+
+/* ---------- sticky mobile verdict banner ---------- */
+.sticky-verdict { display: none; }
+@media (max-width: 640px) {
+  .sticky-verdict {
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+    align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--panel); border-top: 1px solid var(--line); box-shadow: var(--shadow);
+    padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+  .sticky-verdict.hidden-tab { display: none; }
+  .sticky-verdict .sv-who { font-size: .76rem; color: var(--ink-2); line-height: 1.3; }
+  .sticky-verdict .sv-who b { font-weight: 600; }
+  .sticky-verdict .sv-amt { font-size: 1.05rem; font-weight: 600; white-space: nowrap; }
+  .fab { bottom: 66px; }
+}
 </style>
 </head>
 <body>
 
 <div class="wrap">
+  <div class="brand-bar">
+    <a class="brand-bar-link" href="https://sousadev.com" target="_blank" rel="noopener" data-vmtrc="BrandClick" data-vmtrc-loc="topbar" aria-label="Sousa Dev - sousadev.com">
+      <svg class="brand-logo" viewBox="0 0 100 100" aria-hidden="true"><path d="M62 22 L34 50 L62 78"/><path d="M50 40 L76 60 L50 82"/></svg>
+      <span>Sousa Dev</span>
+    </a>
+  </div>
   <header class="top">
     <div class="top-row">
-      <span class="eyebrow">Simulador fiscal · Portugal · ano fiscal 2026 · <a class="brand-link" href="https://sousadev.com" target="_blank" rel="noopener" data-vmtrc="BrandClick" data-vmtrc-loc="header">by Sousa Dev</a></span>
-      <button type="button" id="btn-print" class="export-btn" data-vmtrc="ExportPDF" title="Abre o diálogo de impressão do navegador — escolhe &quot;Guardar como PDF&quot; no destino.">⭳ Exportar PDF para o contabilista</button>
+      <span class="eyebrow">Simulador fiscal · Portugal · ano fiscal 2026</span>
+      <button type="button" id="btn-print" class="export-btn" data-vmtrc="ExportPDF" title="Abre o diálogo de impressão do navegador - escolhe &quot;Guardar como PDF&quot; no destino.">
+        <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <span>Exportar análise em PDF</span>
+      </button>
     </div>
     <h1>Recibos verdes ou sociedade unipessoal?</h1>
-    <p>Compara o lucro total que ficas a ganhar por ano em cada regime — conta pessoal <b>e</b> lucro retido na empresa (é teu na mesma, mesmo que ainda não esteja na tua conta). As despesas reais entram nas duas colunas — em recibos verdes não baixam o IRS (regime simplificado), mas saem na mesma do teu bolso.</p>
+    <p>Compara o lucro total que ficas a ganhar por ano em cada regime - conta pessoal <b>e</b> lucro retido na empresa (é teu na mesma, mesmo que ainda não esteja na tua conta). As despesas reais entram nas duas colunas - em recibos verdes não baixam o IRS (regime simplificado), mas saem na mesma do teu bolso.</p>
   </header>
 
   <div class="print-header" id="print-header" aria-hidden="true"></div>
@@ -417,9 +491,9 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
         <div class="field">
           <label for="ativ">Tipo de atividade</label>
           <select id="ativ">
-            <option value="serv75" selected>Prestação de serviços (tabela art. 151.º) — coef. 0,75</option>
-            <option value="serv35">Outras prestações de serviços — coef. 0,35</option>
-            <option value="bens15">Venda de mercadorias / produtos — coef. 0,15</option>
+            <option value="serv75" selected>Prestação de serviços (tabela art. 151.º) - coef. 0,75</option>
+            <option value="serv35">Outras prestações de serviços - coef. 0,35</option>
+            <option value="bens15">Venda de mercadorias / produtos - coef. 0,15</option>
           </select>
           <span class="hint">Define o coeficiente de IRS e a base de Segurança Social (70% serviços · 20% vendas).</span>
         </div>
@@ -435,7 +509,8 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
         <div class="field">
           <div class="row"><label for="sal">Salário bruto mensal do gerente</label><span class="val mono" id="sal-v"></span></div>
           <input type="range" id="sal" min="0" max="6000" step="50" value="1200">
-          <span class="hint">×14 meses. Mesmo com salário 0, o gerente desconta SS sobre uma base mínima de 1 IAS (522,50 €/mês) — está contabilizado. Queres partir de um líquido específico? Calcula-o na aba "Salário do gerente" e fixa-o aqui.</span>
+          <span class="hint">×14 meses. Mesmo com salário 0, o gerente desconta SS sobre uma base mínima de 1 IAS (522,50 €/mês) - está contabilizado.</span>
+          <button type="button" id="cta-goto-salary" class="hint-cta" data-vmtrc="GotoSalaryCTA">Queres partir de um líquido específico? Calcula no separador "Salário do gerente" →</button>
         </div>
         <div class="field">
           <div class="row"><label for="div">Lucro distribuído como dividendos</label><span class="val mono" id="div-v"></span></div>
@@ -538,32 +613,32 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
 
       <section class="notes">
         <div>
-          <h3>Como está calculado — recibos verdes</h3>
+          <h3>Como está calculado - recibos verdes</h3>
           <ul>
             <li><b>Segurança Social:</b> 21,4% sobre o rendimento relevante (70% da faturação em serviços, 20% em vendas). Aproximação anual do apuramento trimestral; ignora a base mínima e o teto de 12 × IAS.</li>
-            <li><b>Rendimento tributável:</b> faturação × coeficiente (art. 31.º CIRS). As despesas reais <b>não</b> entram — o coeficiente já presume uma dedução fixa.</li>
+            <li><b>Rendimento tributável:</b> faturação × coeficiente (art. 31.º CIRS). As despesas reais <b>não</b> entram - o coeficiente já presume uma dedução fixa.</li>
             <li><b>Dedução específica:</b> ao rendimento tributável deduz-se 4.104 € ou, se superior, a SS efetivamente paga (art. 31.º n.º 13). Muitos simuladores esquecem-na e sobrestimam o IRS.</li>
             <li><b>IRS:</b> escalões progressivos em vigor, contribuinte solteiro sem dependentes.</li>
             <li><b>No bolso:</b> faturação − SS − IRS − <b>despesas reais</b>.</li>
           </ul>
         </div>
         <div>
-          <h3>Como está calculado — unipessoal</h3>
+          <h3>Como está calculado - unipessoal</h3>
           <ul>
             <li><b>Salário do gerente:</b> ×14; SS patronal 23,75% (custo da empresa) e SS do trabalhador 11% (descontado no salário); IRS categoria A com dedução específica de 4.104 €. Com salário abaixo de 1 IAS, a empresa paga na mesma 34,75% sobre a base mínima.</li>
-            <li><b>Custos só da empresa:</b> contabilista, conta bancária e fixos (seguro AT, software, certidões) — não existem em recibos verdes e entram sempre na comparação e no ponto de equilíbrio.</li>
+            <li><b>Custos só da empresa:</b> contabilista, conta bancária e fixos (seguro AT, software, certidões) - não existem em recibos verdes e entram sempre na comparação e no ponto de equilíbrio.</li>
             <li><b>Lucro tributável:</b> faturação − salário bruto − SS patronal − despesas reais − custos só da empresa.</li>
             <li><b>IRC:</b> 15% até 50 k€ (PME) e 19% acima, + derrama municipal até 1,5%.</li>
             <li><b>Dividendos:</b> a parte distribuída do lucro líquido paga 28% de retenção liberatória.</li>
-            <li><b>Lucro total:</b> salário líquido + dividendos líquidos + lucro retido. O retido conta como teu (a empresa é tua), mas fica dentro da sociedade — não é dinheiro na tua conta pessoal já hoje.</li>
+            <li><b>Lucro total:</b> salário líquido + dividendos líquidos + lucro retido. O retido conta como teu (a empresa é tua), mas fica dentro da sociedade - não é dinheiro na tua conta pessoal já hoje.</li>
           </ul>
         </div>
         <div class="full">
           <h3>O que fica de fora</h3>
           <ul>
             <li>Deduções à coleta (saúde, educação, habitação, dependentes), quociente conjugal, mínimo de existência, IRS Jovem e outros rendimentos do agregado.</li>
-            <li>IVA (assume-se que é neutro ou que há isenção do art. 53.º), retenções na fonte e pagamentos por conta — afetam a tesouraria, não o imposto final.</li>
-            <li>Na empresa: tributações autónomas (viaturas, representação) e custos de constituição (~360 € na Empresa na Hora). <b>O lucro retido aqui é contado ao valor facial</b> — quando um dia o levantares como dividendo extra, pagas mais 28% nessa altura, o que este simulador não desconta antecipadamente.</li>
+            <li>IVA (assume-se que é neutro ou que há isenção do art. 53.º), retenções na fonte e pagamentos por conta - afetam a tesouraria, não o imposto final.</li>
+            <li>Na empresa: tributações autónomas (viaturas, representação) e custos de constituição (~360 € na Empresa na Hora). <b>O lucro retido aqui é contado ao valor facial</b> - quando um dia o levantares como dividendo extra, pagas mais 28% nessa altura, o que este simulador não desconta antecipadamente.</li>
             <li>Em recibos verdes: opção pela contabilidade organizada (obrigatória acima de 200 k€), que permitiria deduzir despesas reais.</li>
           </ul>
         </div>
@@ -584,10 +659,10 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
         <div class="field">
           <label for="sal2-sched">Modalidade de pagamento</label>
           <select id="sal2-sched">
-            <option value="12" selected>Duodécimos — mesmo valor todos os meses</option>
-            <option value="14">14 meses — subsídios de férias e Natal à parte, em junho e dezembro</option>
+            <option value="12" selected>Duodécimos - mesmo valor todos os meses</option>
+            <option value="14">14 meses - subsídios de férias e Natal à parte, em junho e dezembro</option>
           </select>
-          <span class="hint">Duodécimos reparte os subsídios pelos 12 meses; 14 meses paga-os de uma vez em junho/dezembro. O total anual é diferente para o mesmo valor mensal — ver comparação à direita.</span>
+          <span class="hint">Duodécimos reparte os subsídios pelos 12 meses; 14 meses paga-os de uma vez em junho/dezembro. O total anual é diferente para o mesmo valor mensal - ver comparação à direita.</span>
         </div>
       </div>
 
@@ -600,8 +675,8 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
         <div class="field">
           <label for="sal2-summ">Modalidade</label>
           <select id="sal2-summ">
-            <option value="cartao" selected>Cartão / vale refeição — isento até 10,20 €/dia</option>
-            <option value="dinheiro">Transferência / dinheiro — isento até 6,00 €/dia</option>
+            <option value="cartao" selected>Cartão / vale refeição - isento até 10,20 €/dia</option>
+            <option value="dinheiro">Transferência / dinheiro - isento até 6,00 €/dia</option>
           </select>
         </div>
         <div class="field">
@@ -611,7 +686,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
         <div class="field">
           <div class="row"><label for="sal2-meses">Meses pagos por ano</label><span class="val mono" id="sal2-meses-v"></span></div>
           <input type="range" id="sal2-meses" min="0" max="12" step="1" value="11">
-          <span class="hint">Muitas empresas não pagam no mês de férias — ajusta se for o teu caso.</span>
+          <span class="hint">Muitas empresas não pagam no mês de férias - ajusta se for o teu caso.</span>
         </div>
       </div>
 
@@ -681,37 +756,37 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
 
       <section class="insight-grid">
         <article class="insight-card">
-          <h3>Subsídio de alimentação — isento vs. tributado</h3>
+          <h3>Subsídio de alimentação - isento vs. tributado</h3>
           <table id="t-sub"></table>
         </article>
         <article class="insight-card">
           <h3>E se desses este valor como salário em vez de subsídio?</h3>
           <p class="hero-save" id="sub-save"></p>
           <table id="t-sub-vs-sal"></table>
-          <p class="note">O subsídio de alimentação, dentro do limite isento, não paga SS nem IRS — nem para ti, nem SS patronal para a empresa. Dar o mesmo valor líquido como salário obriga a um bruto maior, mais caro para a empresa.</p>
+          <p class="note">O subsídio de alimentação, dentro do limite isento, não paga SS nem IRS - nem para ti, nem SS patronal para a empresa. Dar o mesmo valor líquido como salário obriga a um bruto maior, mais caro para a empresa.</p>
         </article>
       </section>
 
       <section class="notes">
         <div class="full">
-          <h3>Como está calculado — salário do gerente</h3>
+          <h3>Como está calculado - salário do gerente</h3>
           <ul>
-            <li><b>Bruto a partir do líquido:</b> resolução inversa por bisseção — procura-se o salário bruto anual cujo líquido (bruto − SS 11% − IRS por escalões, com dedução específica de 4.104 € sobre a base após SS) iguala o líquido total pretendido (líquido por pagamento × nº de pagamentos/ano).</li>
-            <li><b>Duodécimos vs. 14 meses:</b> ambos distribuem o mesmo salário anual, mas com nº de pagamentos diferente (12 vs. 14) — para o <i>mesmo líquido por pagamento</i>, os totais anuais (e por isso o bruto e o custo) são diferentes, não comparáveis diretamente sem ajustar por isto.</li>
-            <li><b>Subsídio de alimentação:</b> isento de IRS e SS (trabalhador e entidade patronal) até 10,20 €/dia em cartão refeição ou 6,00 €/dia em dinheiro/transferência (valores de referência, confirmar os em vigor). O excedente diário é tributado como remuneração normal — a estimativa do seu impacto líquido usa a tua taxa marginal de IRS no escalão atual.</li>
+            <li><b>Bruto a partir do líquido:</b> resolução inversa por bisseção - procura-se o salário bruto anual cujo líquido (bruto − SS 11% − IRS por escalões, com dedução específica de 4.104 € sobre a base após SS) iguala o líquido total pretendido (líquido por pagamento × nº de pagamentos/ano).</li>
+            <li><b>Duodécimos vs. 14 meses:</b> ambos distribuem o mesmo salário anual, mas com nº de pagamentos diferente (12 vs. 14) - para o <i>mesmo líquido por pagamento</i>, os totais anuais (e por isso o bruto e o custo) são diferentes, não comparáveis diretamente sem ajustar por isto.</li>
+            <li><b>Subsídio de alimentação:</b> isento de IRS e SS (trabalhador e entidade patronal) até 10,20 €/dia em cartão refeição ou 6,00 €/dia em dinheiro/transferência (valores de referência, confirmar os em vigor). O excedente diário é tributado como remuneração normal - a estimativa do seu impacto líquido usa a tua taxa marginal de IRS no escalão atual.</li>
             <li><b>SS patronal:</b> 23,75% sobre o salário bruto; se o salário mensal for inferior a 1 IAS (522,50 €), aplica-se a contribuição mínima obrigatória do gerente (34,75% sobre 1 IAS), suportada pela empresa.</li>
           </ul>
         </div>
       </section>
 
-      <p class="disclaimer">Cálculo do IRS por escalões anuais (não pelas tabelas de retenção na fonte mensais, que variam com a periodicidade dos pagamentos) — o valor final de imposto é o mesmo, mas a retenção mês a mês pode diferir ligeiramente do aqui apresentado. O excedente do subsídio de alimentação acima do limite isento é estimado à tua taxa marginal de IRS. Não inclui deduções à coleta pessoais nem outros rendimentos do agregado familiar.</p>
+      <p class="disclaimer">Cálculo do IRS por escalões anuais (não pelas tabelas de retenção na fonte mensais, que variam com a periodicidade dos pagamentos) - o valor final de imposto é o mesmo, mas a retenção mês a mês pode diferir ligeiramente do aqui apresentado. O excedente do subsídio de alimentação acima do limite isento é estimado à tua taxa marginal de IRS. Não inclui deduções à coleta pessoais nem outros rendimentos do agregado familiar.</p>
     </main>
   </div>
 
-  <div class="print-footer" id="print-footer" aria-hidden="true">Gerado com o simulador gratuito da Sousa Dev — <a href="https://recibos-empresa.sousadev.com">recibos-empresa.sousadev.com</a></div>
+  <div class="print-footer" id="print-footer" aria-hidden="true">Gerado com o simulador gratuito da Sousa Dev - <a href="https://recibos-empresa.sousadev.com">recibos-empresa.sousadev.com</a></div>
 
   <footer class="brand-footer">
-    <a class="brand-mark" href="https://sousadev.com" target="_blank" rel="noopener" data-vmtrc="BrandClick" data-vmtrc-loc="footer" aria-label="Sousa Dev — sousadev.com">
+    <a class="brand-mark" href="https://sousadev.com" target="_blank" rel="noopener" data-vmtrc="BrandClick" data-vmtrc-loc="footer" aria-label="Sousa Dev - sousadev.com">
       <svg class="brand-logo" viewBox="0 0 100 100" aria-hidden="true"><path d="M62 22 L34 50 L62 78"/><path d="M50 40 L76 60 L50 82"/></svg>
       <span>Sousa Dev</span>
     </a>
@@ -826,7 +901,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
         ? row('SS do gerente (base mínima 1 IAS × 34,75%)', '− ' + eur(r.ssPat), 'neg', 'Salário abaixo de 1 IAS: a contribuição mínima é suportada pela empresa.')
         : row(`SS patronal (${pct(p.sspat*100)})`, '− ' + eur(r.ssPat), 'neg')) +
       row('Despesas reais da atividade', '− ' + eur(p.desp), 'neg', 'Deduzidas a 100% ao lucro.') +
-      row('Custos só da empresa (CC + banco + fixos)', '− ' + eur(r.fixos), 'neg', 'Não existem em recibos verdes — são o "bilhete de entrada" da sociedade.') +
+      row('Custos só da empresa (CC + banco + fixos)', '− ' + eur(r.fixos), 'neg', 'Não existem em recibos verdes - são o "bilhete de entrada" da sociedade.') +
       row('Lucro tributável', eur(r.lucro), 'sub') +
       row('IRC + derrama', '− ' + eur(r.irc + r.derr), 'neg') +
       row('Lucro líquido da empresa', eur(r.lucroLiq)) +
@@ -838,7 +913,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
       row('Lucro total (conta pessoal + retido)', eur(r.total), 'total') +
       row('Carga fiscal e contributiva efetiva', pct(r.fat ? encargos / r.fat * 100 : 0), 'aux');
     const w = $('emp-warn');
-    if (r.lucro < 0) { w.textContent = `Com esta faturação a empresa fecha o ano com prejuízo de ${eur(-r.lucro)} — o salário do gerente não é sustentável. Baixa o salário ou a faturação não chega para este modelo.`; w.classList.add('on'); }
+    if (r.lucro < 0) { w.textContent = `Com esta faturação a empresa fecha o ano com prejuízo de ${eur(-r.lucro)} - o salário do gerente não é sustentável. Baixa o salário ou a faturação não chega para este modelo.`; w.classList.add('on'); }
     else w.classList.remove('on');
   }
 
@@ -848,16 +923,24 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
     const split = emp.retido > 0 ? ` (${eur(emp.bolso)} na conta pessoal + ${eur(emp.retido)} retidos na empresa)` : '';
     if (Math.abs(d) < 500) {
       lead.innerHTML = 'Neste cenário os dois regimes dão praticamente <span class="who">o mesmo</span>.';
-      sub.textContent = 'A diferença é inferior a 500 € por ano de lucro total — decide pela simplicidade administrativa, não pelo imposto.';
+      sub.textContent = 'A diferença é inferior a 500 € por ano de lucro total - decide pela simplicidade administrativa, não pelo imposto.';
     } else if (d > 0) {
       lead.innerHTML = 'Compensa mais a <span class="who emp">sociedade unipessoal</span>';
       sub.textContent = `Ficas com mais ${eur(d)} de lucro total por ano${split}.`;
     } else {
       lead.innerHTML = 'Compensa mais ficar em <span class="who rv">recibos verdes</span>';
-      sub.textContent = `Ficas com mais ${eur(-d)} de lucro total por ano — mesmo já contando com tudo o que a empresa teria${split}.`;
+      sub.textContent = `Ficas com mais ${eur(-d)} de lucro total por ano - mesmo já contando com tudo o que a empresa teria${split}.`;
     }
     dl.textContent = (d >= 0 ? '+' : '−') + eur(Math.abs(d));
     dl.style.color = Math.abs(d) < 500 ? 'var(--ink-2)' : d > 0 ? 'var(--emp)' : 'var(--rv)';
+
+    const svWho = $('sv-who'), svAmt = $('sv-amt');
+    const color = Math.abs(d) < 500 ? 'var(--ink-2)' : d > 0 ? 'var(--emp)' : 'var(--rv)';
+    svWho.innerHTML = Math.abs(d) < 500
+      ? 'Compensa praticamente <b>o mesmo</b>'
+      : d > 0 ? 'Compensa mais a <b>sociedade unipessoal</b>' : 'Compensa mais <b>recibos verdes</b>';
+    svAmt.textContent = (d >= 0 ? '+' : '−') + eur(Math.abs(d)) + '/ano';
+    svAmt.style.color = color;
   }
 
   function renderBreakeven(p, emp) {
@@ -866,9 +949,9 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
     const fixosTxt = `Os ${eur(emp.fixos)} anuais de contabilista, banco e custos fixos da empresa já estão descontados.`;
     if (be.kind === 'always') {
       n.textContent = '0 €';
-      t.textContent = `Com ${eur(p.fat)} de faturação e este salário, a empresa dá mais lucro total mesmo sem despesas reais — a poupança fiscal só por si paga os custos da sociedade. ${fixosTxt}`;
+      t.textContent = `Com ${eur(p.fat)} de faturação e este salário, a empresa dá mais lucro total mesmo sem despesas reais - a poupança fiscal só por si paga os custos da sociedade. ${fixosTxt}`;
     } else if (be.kind === 'never') {
-      n.textContent = '—';
+      n.textContent = '-';
       t.textContent = `Com ${eur(p.fat)} de faturação e este salário, não há nível de despesas reais que faça a empresa dar mais lucro total: os custos fixos da sociedade e a SS do gerente comem a vantagem. Experimenta baixar o salário ou subir a faturação.`;
     } else {
       n.textContent = eur(be.desp);
@@ -1128,7 +1211,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
     lockBtn.textContent = inSync ? 'Salário fixado no comparador' : 'Usar este salário no comparador';
     lockBtn.classList.toggle('done', inSync);
     if (chosen.grossPag > 6000) {
-      lockStatus.textContent = `Acima do máximo do simulador (6.000 €/mês) — será fixado em 6.000 €.`;
+      lockStatus.textContent = `Acima do máximo do simulador (6.000 €/mês) - será fixado em 6.000 €.`;
     } else {
       lockStatus.textContent = inSync
         ? `A aba "Recibos verdes vs. empresa" já usa este salário (${eur(currentSal)}/mês).`
@@ -1158,10 +1241,10 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
     $('t-sub').innerHTML =
       rowS('Valor diário', eur2(sp.subd)) +
       rowS('Valor mensal total', eur(sub.totalMensal)) +
-      rowS('— isento de IRS e SS', eur(sub.isentoMensal)) +
+      rowS('- isento de IRS e SS', eur(sub.isentoMensal)) +
       (sub.excedenteMensal > 0
-        ? rowS('— excedente (tributado como salário)', eur(sub.excedenteMensal), 'neg')
-        : rowS('— excedente', '— nenhum, está dentro do limite isento')) +
+        ? rowS('- excedente (tributado como salário)', eur(sub.excedenteMensal), 'neg')
+        : rowS('- excedente', '- nenhum, está dentro do limite isento')) +
       rowS('Custo anual para a empresa', eur(sub.totalAnual + sub.ssPatExcedente), 'total');
 
     const multiplier = (1 - sp.sstrab) * (1 - mRate);
@@ -1205,9 +1288,11 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
       tabBtns[k].setAttribute('aria-selected', k === name ? 'true' : 'false');
     });
     if (name === 'salary') updateSalary();
+    $('sticky-verdict').classList.toggle('hidden-tab', name !== 'compare');
   }
   tabBtns.compare.addEventListener('click', () => showTab('compare'));
   tabBtns.salary.addEventListener('click', () => showTab('salary'));
+  $('cta-goto-salary').addEventListener('click', () => { showTab('salary'); tabBtns.salary.scrollIntoView({ block: 'nearest' }); });
 
   /* ---------- print / export to PDF ---------- */
   function paramRow(label, val) { return `<tr><td>${label}</td><td>${val}</td></tr>`; }
@@ -1244,7 +1329,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
     const rows = [
       paramRow('Líquido por pagamento mensal', eur(sp.net)),
       paramRow('Modalidade de pagamento', schedLabel),
-      paramRow('Subsídio de alimentação — valor diário', eur2(sp.subd)),
+      paramRow('Subsídio de alimentação - valor diário', eur2(sp.subd)),
       paramRow('Modalidade do subsídio', summLabel),
       paramRow('Dias úteis por mês', sp.dias),
       paramRow('Meses de subsídio pagos por ano', sp.meses),
@@ -1261,9 +1346,9 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
     const now = new Date();
     const tabName = tabPanels.salary.hidden ? 'Recibos verdes vs. sociedade unipessoal' : 'Salário do gerente';
     $('print-header').innerHTML =
-      `<div class="t1">Simulação fiscal — ${tabName}</div>` +
+      `<div class="t1">Simulação fiscal - ${tabName}</div>` +
       `<div class="t2">Exportado em ${now.toLocaleDateString('pt-PT')} às ${now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })} · valores aproximados, para validação por contabilista certificado</div>` +
-      `<div class="t3">Gerado com o simulador gratuito da Sousa Dev — recibos-empresa.sousadev.com</div>`;
+      `<div class="t3">Gerado com o simulador gratuito da Sousa Dev - recibos-empresa.sousadev.com</div>`;
     buildCompareParams();
     buildSalaryParams();
   }
@@ -1272,6 +1357,10 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
   $('btn-print').addEventListener('click', () => { preparePrint(); window.print(); });
 })();
 </script>
+<div class="sticky-verdict" id="sticky-verdict" aria-hidden="true">
+  <span class="sv-who" id="sv-who"></span>
+  <span class="sv-amt mono" id="sv-amt"></span>
+</div>
 <a class="fab" href="mailto:info@sousadev.com?subject=Feedback%20%E2%80%94%20Simulador%20recibos%20verdes%20vs.%20empresa" data-vmtrc="Feedback" aria-label="Reportar um bug ou enviar feedback por email">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H7l-3 3z"/><path d="M8 9h8M8 12h5"/></svg>
   <span>Bug ou feedback?</span>
