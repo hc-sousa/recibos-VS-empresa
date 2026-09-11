@@ -384,11 +384,13 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
   .compare, .sched-compare, .insight-grid, .notes { grid-template-columns: 1fr !important; }
   .stat-hero { flex-direction: column; align-items: flex-start; gap: 10px; }
   .print-header { display: block !important; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 16px; }
+  .print-header .ph-row { display: flex; align-items: flex-start; gap: 12px; }
   .print-header .t1 { font-size: 1.2rem; font-weight: 600; }
   .print-header .t2 { font-size: .82rem; color: #444; margin-top: 3px; }
   .print-header .t3 { font-size: .74rem; color: #666; margin-top: 2px; }
-  .print-footer { display: block !important; margin-top: 20px; padding-top: 10px; border-top: 1px solid #999; font-size: .75rem; color: #444; }
+  .print-footer { display: flex !important; align-items: center; gap: 8px; margin-top: 20px; padding-top: 10px; border-top: 1px solid #999; font-size: .75rem; color: #444; }
   .print-footer a { color: #1a4f8a; }
+  .print-logo { width: 22px; height: 22px; object-fit: contain; flex: none; }
   .brand-footer, .brand-bar, .sticky-verdict { display: none !important; }
   .print-params { display: block !important; background: #fafafa; border: 1px solid #ccc; border-radius: 6px; padding: 12px 16px; margin-bottom: 18px; break-inside: avoid; }
   .print-params h3 { font-size: .88rem; margin-bottom: 8px; }
@@ -410,7 +412,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
 }
 .brand-mark { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); text-decoration: none; font-weight: 500; }
 .brand-mark:hover { color: var(--ink); }
-.brand-logo { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 14; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.brand-logo { width: 15px; height: 15px; display: block; object-fit: contain; flex: none; }
 .brand-projects { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-left: auto; }
 .brand-projects-label { color: var(--ink-3); }
 .brand-projects a { color: var(--ink-2); text-decoration: none; }
@@ -451,7 +453,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
 <div class="wrap">
   <div class="brand-bar">
     <a class="brand-bar-link" href="https://sousadev.com" target="_blank" rel="noopener" data-vmtrc="BrandClick" data-vmtrc-loc="topbar" aria-label="Sousa Dev - sousadev.com">
-      <svg class="brand-logo" viewBox="0 0 100 100" aria-hidden="true"><path d="M62 22 L34 50 L62 78"/><path d="M50 40 L76 60 L50 82"/></svg>
+      <img class="brand-logo" src="sousa-dev-logo.png" alt="" width="17" height="17">
       <span>Sousa Dev</span>
     </a>
   </div>
@@ -783,11 +785,14 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
     </main>
   </div>
 
-  <div class="print-footer" id="print-footer" aria-hidden="true">Gerado com o simulador gratuito da Sousa Dev - <a href="https://recibos-empresa.sousadev.com">recibos-empresa.sousadev.com</a></div>
+  <div class="print-footer" id="print-footer" aria-hidden="true">
+    <img class="print-logo" src="sousa-dev-logo.png" alt="Sousa Dev">
+    <span>Gerado com o simulador gratuito da Sousa Dev - <a href="https://recibos-empresa.sousadev.com">recibos-empresa.sousadev.com</a></span>
+  </div>
 
   <footer class="brand-footer">
     <a class="brand-mark" href="https://sousadev.com" target="_blank" rel="noopener" data-vmtrc="BrandClick" data-vmtrc-loc="footer" aria-label="Sousa Dev - sousadev.com">
-      <svg class="brand-logo" viewBox="0 0 100 100" aria-hidden="true"><path d="M62 22 L34 50 L62 78"/><path d="M50 40 L76 60 L50 82"/></svg>
+      <img class="brand-logo" src="sousa-dev-logo.png" alt="" width="15" height="15">
       <span>Sousa Dev</span>
     </a>
     <span>Soluções Informáticas</span>
@@ -1346,9 +1351,13 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
     const now = new Date();
     const tabName = tabPanels.salary.hidden ? 'Recibos verdes vs. sociedade unipessoal' : 'Salário do gerente';
     $('print-header').innerHTML =
+      `<div class="ph-row">` +
+      `<img class="print-logo" src="sousa-dev-logo.png" alt="Sousa Dev">` +
+      `<div>` +
       `<div class="t1">Simulação fiscal - ${tabName}</div>` +
       `<div class="t2">Exportado em ${now.toLocaleDateString('pt-PT')} às ${now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })} · valores aproximados, para validação por contabilista certificado</div>` +
-      `<div class="t3">Gerado com o simulador gratuito da Sousa Dev - recibos-empresa.sousadev.com</div>`;
+      `<div class="t3">Gerado com o simulador gratuito da Sousa Dev - recibos-empresa.sousadev.com</div>` +
+      `</div></div>`;
     buildCompareParams();
     buildSalaryParams();
   }
