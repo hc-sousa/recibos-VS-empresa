@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Simulador fiscal português: recibos verdes (regime simplificado) vs. sociedade unipessoal. Compara lucro total, simula o salário do gerente e exporta um PDF para o contabilista.">
+<meta name="author" content="Sousa Dev">
+<meta property="og:site_name" content="Sousa Dev">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧾</text></svg>">
 <!-- Vemetric analytics (public project token; the private API key is NOT in this repo) -->
@@ -94,6 +96,9 @@ p { margin: 0; }
   font-size: .68rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3);
 }
 a { color: var(--rv); }
+.brand-link { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--ink-3); }
+.brand-link:hover { color: var(--ink); border-bottom-color: var(--ink); }
+.brand-link:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 3px; }
 
 .wrap { max-width: 1240px; margin: 0 auto; padding: 32px 20px 64px; }
 header.top { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
@@ -107,6 +112,7 @@ header.top p { color: var(--ink-2); max-width: 68ch; }
 .export-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .print-header { display: none; }
 .print-params { display: none; }
+.print-footer { display: none; }
 
 .layout { display: grid; grid-template-columns: 360px 1fr; gap: 24px; align-items: start; }
 @media (max-width: 920px) { .layout { grid-template-columns: 1fr; } .inputs { position: static !important; } }
@@ -331,6 +337,10 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
   .print-header { display: block !important; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 16px; }
   .print-header .t1 { font-size: 1.2rem; font-weight: 600; }
   .print-header .t2 { font-size: .82rem; color: #444; margin-top: 3px; }
+  .print-header .t3 { font-size: .74rem; color: #666; margin-top: 2px; }
+  .print-footer { display: block !important; margin-top: 20px; padding-top: 10px; border-top: 1px solid #999; font-size: .75rem; color: #444; }
+  .print-footer a { color: #1a4f8a; }
+  .brand-footer { display: none !important; }
   .print-params { display: block !important; background: #fafafa; border: 1px solid #ccc; border-radius: 6px; padding: 12px 16px; margin-bottom: 18px; break-inside: avoid; }
   .print-params h3 { font-size: .88rem; margin-bottom: 8px; }
   .print-params table { width: 100%; border-collapse: collapse; font-size: .82rem; }
@@ -342,6 +352,21 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
   a[href]::after { content: ""; }
   .fab { display: none !important; }
 }
+
+/* ---------- brand footer ---------- */
+.brand-footer {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px;
+  margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line);
+  font-size: .78rem; color: var(--ink-3);
+}
+.brand-mark { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); text-decoration: none; font-weight: 500; }
+.brand-mark:hover { color: var(--ink); }
+.brand-logo { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 14; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.brand-projects { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-left: auto; }
+.brand-projects-label { color: var(--ink-3); }
+.brand-projects a { color: var(--ink-2); text-decoration: none; }
+.brand-projects a:hover { color: var(--ink); text-decoration: underline; }
+.brand-mark:focus-visible, .brand-projects a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 3px; }
 
 /* ---------- feedback FAB ---------- */
 .fab {
@@ -361,7 +386,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
 <div class="wrap">
   <header class="top">
     <div class="top-row">
-      <span class="eyebrow">Simulador fiscal · Portugal · ano fiscal 2026</span>
+      <span class="eyebrow">Simulador fiscal · Portugal · ano fiscal 2026 · <a class="brand-link" href="https://sousadev.com" target="_blank" rel="noopener" data-vmtrc="BrandClick" data-vmtrc-loc="header">by Sousa Dev</a></span>
       <button type="button" id="btn-print" class="export-btn" data-vmtrc="ExportPDF" title="Abre o diálogo de impressão do navegador — escolhe &quot;Guardar como PDF&quot; no destino.">⭳ Exportar PDF para o contabilista</button>
     </div>
     <h1>Recibos verdes ou sociedade unipessoal?</h1>
@@ -682,6 +707,24 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
       <p class="disclaimer">Cálculo do IRS por escalões anuais (não pelas tabelas de retenção na fonte mensais, que variam com a periodicidade dos pagamentos) — o valor final de imposto é o mesmo, mas a retenção mês a mês pode diferir ligeiramente do aqui apresentado. O excedente do subsídio de alimentação acima do limite isento é estimado à tua taxa marginal de IRS. Não inclui deduções à coleta pessoais nem outros rendimentos do agregado familiar.</p>
     </main>
   </div>
+
+  <div class="print-footer" id="print-footer" aria-hidden="true">Gerado com o simulador gratuito da Sousa Dev — <a href="https://recibos-empresa.sousadev.com">recibos-empresa.sousadev.com</a></div>
+
+  <footer class="brand-footer">
+    <a class="brand-mark" href="https://sousadev.com" target="_blank" rel="noopener" data-vmtrc="BrandClick" data-vmtrc-loc="footer" aria-label="Sousa Dev — sousadev.com">
+      <svg class="brand-logo" viewBox="0 0 100 100" aria-hidden="true"><path d="M62 22 L34 50 L62 78"/><path d="M50 40 L76 60 L50 82"/></svg>
+      <span>Sousa Dev</span>
+    </a>
+    <span>Soluções Informáticas</span>
+    <span class="mono">© 2026</span>
+    <nav class="brand-projects" aria-label="Outros projetos Sousa Dev">
+      <span class="brand-projects-label">Outros projetos:</span>
+      <a href="https://djast.dev" target="_blank" rel="noopener" data-vmtrc="BrandClick" data-vmtrc-loc="footer-djast">djast</a>
+      <a href="https://bskycopilot.com" target="_blank" rel="noopener" data-vmtrc="BrandClick" data-vmtrc-loc="footer-kunopilot">Kunopilot</a>
+      <a href="https://grokindex.dev" target="_blank" rel="noopener" data-vmtrc="BrandClick" data-vmtrc-loc="footer-grokindex">GrokIndex</a>
+      <a href="https://aissue.yourgenlab.com" target="_blank" rel="noopener" data-vmtrc="BrandClick" data-vmtrc-loc="footer-aissue">AIssue</a>
+    </nav>
+  </footer>
 </div>
 
 <script>
@@ -1219,7 +1262,8 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
     const tabName = tabPanels.salary.hidden ? 'Recibos verdes vs. sociedade unipessoal' : 'Salário do gerente';
     $('print-header').innerHTML =
       `<div class="t1">Simulação fiscal — ${tabName}</div>` +
-      `<div class="t2">Exportado em ${now.toLocaleDateString('pt-PT')} às ${now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })} · valores aproximados, para validação por contabilista certificado</div>`;
+      `<div class="t2">Exportado em ${now.toLocaleDateString('pt-PT')} às ${now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })} · valores aproximados, para validação por contabilista certificado</div>` +
+      `<div class="t3">Gerado com o simulador gratuito da Sousa Dev — recibos-empresa.sousadev.com</div>`;
     buildCompareParams();
     buildSalaryParams();
   }
