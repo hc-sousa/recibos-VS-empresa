@@ -356,6 +356,7 @@ svg.chart .hdot { stroke: var(--panel); stroke-width: 2; opacity: 0; }
 .insight-card tr.total td { border-top: 1px solid var(--line); padding-top: 8px; font-weight: 600; }
 .insight-card tr.neg td:last-child { color: var(--neg); }
 .insight-card p.note { font-size: .8rem; color: var(--ink-2); }
+.insight-grid .full { grid-column: 1 / -1; }
 .insight-card p.hero-save { font-size: 1.1rem; font-weight: 500; color: var(--rv); }
 
 .mchart-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 18px 8px; }
@@ -677,8 +678,8 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
         <div class="field">
           <label for="sal2-summ">Modalidade</label>
           <select id="sal2-summ">
-            <option value="cartao" selected>Cartão / vale refeição - isento até 10,20 €/dia</option>
-            <option value="dinheiro">Transferência / dinheiro - isento até 6,00 €/dia</option>
+            <option value="cartao" selected>Cartão / vale refeição - isento até 10,46 €/dia</option>
+            <option value="dinheiro">Transferência / dinheiro - isento até 6,15 €/dia</option>
           </select>
         </div>
         <div class="field">
@@ -696,8 +697,10 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
         <details class="adv">
           <summary>Taxas e parâmetros avançados</summary>
           <div class="adv-grid">
-            <div class="field"><label for="sal2-iscartao">Isenção cartão €/dia</label><input type="number" id="sal2-iscartao" value="10.2" step="0.1" min="0"></div>
-            <div class="field"><label for="sal2-isdinheiro">Isenção dinheiro €/dia</label><input type="number" id="sal2-isdinheiro" value="6" step="0.1" min="0"></div>
+            <div class="field"><label for="sal2-iscartao">Isenção cartão €/dia</label><input type="number" id="sal2-iscartao" value="10.455" step="0.005" min="0"></div>
+            <div class="field"><label for="sal2-isdinheiro">Isenção dinheiro €/dia</label><input type="number" id="sal2-isdinheiro" value="6.15" step="0.05" min="0"></div>
+            <div class="field"><label for="sal2-cardcom">Comissão do cartão % do carregado</label><input type="number" id="sal2-cardcom" value="0" step="0.1" min="0" max="10"></div>
+            <div class="field"><label for="sal2-cardfee">Custo anual do cartão €</label><input type="number" id="sal2-cardfee" value="0" step="0.5" min="0"></div>
             <div class="field"><label for="sal2-deda">Dedução específica cat. A €</label><input type="number" id="sal2-deda" value="4104" step="1" min="0"></div>
             <div class="field"><label for="sal2-sstrab">SS trabalhador %</label><input type="number" id="sal2-sstrab" value="11" step="0.5" min="0" max="20"></div>
             <div class="field"><label for="sal2-sspat">SS patronal %</label><input type="number" id="sal2-sspat" value="23.75" step="0.05" min="0" max="40"></div>
@@ -767,6 +770,12 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
           <table id="t-sub-vs-sal"></table>
           <p class="note">O subsídio de alimentação, dentro do limite isento, não paga SS nem IRS - nem para ti, nem SS patronal para a empresa. Dar o mesmo valor líquido como salário obriga a um bruto maior, mais caro para a empresa.</p>
         </article>
+        <article class="insight-card full">
+          <h3>Vale a pena o cartão refeição, ou pagar em dinheiro?</h3>
+          <p class="hero-save" id="card-save"></p>
+          <table id="t-card-vs-cash"></table>
+          <p class="note">Com o mesmo valor diário, o cartão isenta até 10,46 €/dia e o dinheiro só até 6,15 €/dia - por isso em dinheiro uma parte maior é tributada (IRS + SS tua e SS patronal). Em troca, o cartão pode ter comissão sobre o carregado e custo de emissão: hoje há cartões digitais sem comissão nem mensalidade (Coverflex), outros cobram cerca de 0,6% do carregado mais a emissão (Pluxee). Ajusta esses dois valores nos parâmetros avançados com a proposta do teu fornecedor.</p>
+        </article>
       </section>
 
       <section class="notes">
@@ -775,7 +784,8 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
           <ul>
             <li><b>Bruto a partir do líquido:</b> resolução inversa por bisseção - procura-se o salário bruto anual cujo líquido (bruto − SS 11% − IRS por escalões, com dedução específica de 4.104 € sobre a base após SS) iguala o líquido total pretendido (líquido por pagamento × nº de pagamentos/ano).</li>
             <li><b>Duodécimos vs. 14 meses:</b> ambos distribuem o mesmo salário anual, mas com nº de pagamentos diferente (12 vs. 14) - para o <i>mesmo líquido por pagamento</i>, os totais anuais (e por isso o bruto e o custo) são diferentes, não comparáveis diretamente sem ajustar por isto.</li>
-            <li><b>Subsídio de alimentação:</b> isento de IRS e SS (trabalhador e entidade patronal) até 10,20 €/dia em cartão refeição ou 6,00 €/dia em dinheiro/transferência (valores de referência, confirmar os em vigor). O excedente diário é tributado como remuneração normal - a estimativa do seu impacto líquido usa a tua taxa marginal de IRS no escalão atual.</li>
+            <li><b>Subsídio de alimentação:</b> isento de IRS e SS (trabalhador e entidade patronal) até 10,455 €/dia em cartão refeição ou 6,15 €/dia em dinheiro/transferência (valores de 2026: o limite base é 6,15 € e em cartão acresce 70%). O excedente diário é tributado como remuneração normal - a estimativa do seu impacto líquido usa a tua taxa marginal de IRS no escalão atual.</li>
+            <li><b>Custo do cartão refeição:</b> o cartão pode ter comissão sobre o valor carregado e custo de emissão, suportados pela empresa, e por isso entram no custo anual e na comparação entre cartão e dinheiro. Vêm a 0% e 0 € por omissão porque já há cartões digitais sem comissões nem mensalidade; há fornecedores que cobram cerca de 0,6% do carregado mais a emissão. Confirma na proposta do teu fornecedor e ajusta nos parâmetros avançados.</li>
             <li><b>SS patronal:</b> 23,75% sobre o salário bruto; se o salário mensal for inferior a 1 IAS (522,50 €), aplica-se a contribuição mínima obrigatória do gerente (34,75% sobre 1 IAS), suportada pela empresa.</li>
           </ul>
         </div>
@@ -805,6 +815,11 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
       <a href="https://aissue.yourgenlab.com" target="_blank" rel="noopener" data-vmtrc="BrandClick" data-vmtrc-loc="footer-aissue">AIssue</a>
     </nav>
   </footer>
+</div>
+
+<div class="sticky-verdict" id="sticky-verdict" aria-hidden="true">
+  <span class="sv-who" id="sv-who"></span>
+  <span class="sv-amt mono" id="sv-amt"></span>
 </div>
 
 <script>
@@ -1107,6 +1122,8 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
       meses: parseFloat($('sal2-meses').value) || 0,
       iscartao: parseFloat($('sal2-iscartao').value) || 0,
       isdinheiro: parseFloat($('sal2-isdinheiro').value) || 0,
+      cardcom: (parseFloat($('sal2-cardcom').value) || 0) / 100,
+      cardfee: parseFloat($('sal2-cardfee').value) || 0,
       dedA: parseFloat($('sal2-deda').value) || 0,
       sstrab: (parseFloat($('sal2-sstrab').value) || 0) / 100,
       sspat: (parseFloat($('sal2-sspat').value) || 0) / 100,
@@ -1126,8 +1143,8 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
     return { numPag, netAnual, grossAnual, grossPag, ssTrabAnual, colA, irsAnual, ssPatAnual, custoSalarialAnual };
   }
 
-  function computeSubsidio(sp) {
-    const isentoDiario = sp.summ === 'cartao' ? sp.iscartao : sp.isdinheiro;
+  function computeSubsidio(sp, summ = sp.summ) {
+    const isentoDiario = summ === 'cartao' ? sp.iscartao : sp.isdinheiro;
     const excedenteDiario = Math.max(0, sp.subd - isentoDiario);
     const isentoMensal = Math.min(sp.subd, isentoDiario) * sp.dias;
     const excedenteMensal = excedenteDiario * sp.dias;
@@ -1136,10 +1153,43 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
     const excedenteAnual = excedenteMensal * sp.meses;
     const totalAnual = totalMensal * sp.meses;
     const ssPatExcedente = excedenteAnual * sp.sspat;
-    return { isentoDiario, excedenteDiario, isentoMensal, excedenteMensal, totalMensal, isentoAnual, excedenteAnual, totalAnual, ssPatExcedente };
+    // Só o cartão/vale tem custo de emissão e comissão sobre o carregado; em dinheiro não existe.
+    const custoCartaoAnual = summ === 'cartao' ? totalAnual * sp.cardcom + sp.cardfee : 0;
+    const custoEmpresaAnual = totalAnual + ssPatExcedente + custoCartaoAnual;
+    return { isentoDiario, excedenteDiario, isentoMensal, excedenteMensal, totalMensal, isentoAnual, excedenteAnual, totalAnual, ssPatExcedente, custoCartaoAnual, custoEmpresaAnual };
   }
 
   function rowS(label, val, cls) { return `<tr class="${cls || ''}"><td>${label}</td><td class="mono">${val}</td></tr>`; }
+
+  function renderCardVsCash(sp, mRate) {
+    // Mesmo valor diário nas duas modalidades: muda o limite isento (e, no cartão, os custos do cartão).
+    const netAnual = s => s.isentoAnual + s.excedenteAnual * (1 - sp.sstrab) * (1 - mRate);
+    const cartao = computeSubsidio(sp, 'cartao');
+    const dinheiro = computeSubsidio(sp, 'dinheiro');
+    const ganhoTrab = netAnual(cartao) - netAnual(dinheiro);
+    const poupancaEmp = dinheiro.custoEmpresaAnual - cartao.custoEmpresaAnual;
+    const total = ganhoTrab + poupancaEmp;
+
+    $('t-card-vs-cash').innerHTML =
+      rowS('Valor anual do subsídio (igual nos dois)', eur(cartao.totalAnual)) +
+      rowS('Parte tributada - em cartão', eur(cartao.excedenteAnual)) +
+      rowS('Parte tributada - em dinheiro', eur(dinheiro.excedenteAnual), 'neg') +
+      rowS('Recebes líquido por ano - em cartão', eur(netAnual(cartao))) +
+      rowS('Recebes líquido por ano - em dinheiro', eur(netAnual(dinheiro))) +
+      rowS('Custo do cartão para a empresa (comissão + emissão)', cartao.custoCartaoAnual > 0 ? '− ' + eur2(cartao.custoCartaoAnual) : 'sem custo', cartao.custoCartaoAnual > 0 ? 'neg' : '') +
+      rowS('Custo anual para a empresa - em cartão', eur(cartao.custoEmpresaAnual)) +
+      rowS('Custo anual para a empresa - em dinheiro', eur(dinheiro.custoEmpresaAnual)) +
+      rowS('Vantagem do cartão (teu líquido + poupança da empresa)', (total >= 0 ? '+ ' : '− ') + eur(Math.abs(total)), 'total');
+
+    const msg = $('card-save');
+    if (cartao.excedenteAnual === dinheiro.excedenteAnual && cartao.custoCartaoAnual === 0) {
+      msg.textContent = `Com ${eur2(sp.subd)}/dia estás dentro do limite isento nas duas modalidades e o cartão não tem custo - tanto faz.`;
+    } else if (total > 0) {
+      msg.textContent = `Compensa o cartão: ganham ${eur(total)}/ano no conjunto (${eur(ganhoTrab)} a mais para ti, ${eur(poupancaEmp)} menos de custo para a empresa), já depois de pagar o cartão.`;
+    } else {
+      msg.textContent = `Neste cenário o cartão não compensa: os seus custos comem ${eur(Math.abs(total))}/ano a mais do que a poupança fiscal que traz.`;
+    }
+  }
 
   const msvg = $('mchart'), mtip = $('mtip');
   const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -1205,7 +1255,7 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
     const subLiqMensal = sub.isentoMensal + sub.excedenteMensal * (1 - sp.sstrab) * (1 - mRate);
 
     $('h-bruto').textContent = eur(chosen.grossPag);
-    $('h-custo').textContent = eur(chosen.custoSalarialAnual + sub.totalAnual + sub.ssPatExcedente);
+    $('h-custo').textContent = eur(chosen.custoSalarialAnual + sub.custoEmpresaAnual);
     $('h-liq').textContent = eur(sp.net + subLiqMensal);
 
     const salSlider = $('sal');
@@ -1250,7 +1300,10 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
       (sub.excedenteMensal > 0
         ? rowS('- excedente (tributado como salário)', eur(sub.excedenteMensal), 'neg')
         : rowS('- excedente', '- nenhum, está dentro do limite isento')) +
-      rowS('Custo anual para a empresa', eur(sub.totalAnual + sub.ssPatExcedente), 'total');
+      (sub.custoCartaoAnual > 0
+        ? rowS('Comissão e emissão do cartão (anual)', '+ ' + eur2(sub.custoCartaoAnual), 'neg')
+        : '') +
+      rowS('Custo anual para a empresa', eur(sub.custoEmpresaAnual), 'total');
 
     const multiplier = (1 - sp.sstrab) * (1 - mRate);
     const grossEquiv = multiplier > 0 ? sub.isentoAnual / multiplier : 0;
@@ -1264,6 +1317,8 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
       rowS('Bruto de salário equivalente necessário', eur(grossEquiv)) +
       rowS('Custo à empresa desse salário (+SS patronal)', eur(custoEquivSalario), 'neg') +
       rowS('Poupança anual da empresa', eur(poupanca), 'total');
+
+    renderCardVsCash(sp, mRate);
 
     renderMonthlyChart(sp, chosenNumPag, subLiqMensal);
   }
@@ -1297,7 +1352,10 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
   }
   tabBtns.compare.addEventListener('click', () => showTab('compare'));
   tabBtns.salary.addEventListener('click', () => showTab('salary'));
-  $('cta-goto-salary').addEventListener('click', () => { showTab('salary'); tabBtns.salary.scrollIntoView({ block: 'nearest' }); });
+  $('cta-goto-salary').addEventListener('click', () => {
+    showTab('salary');
+    document.querySelector('.tabbar').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 
   /* ---------- print / export to PDF ---------- */
   function paramRow(label, val) { return `<tr><td>${label}</td><td>${val}</td></tr>`; }
@@ -1340,6 +1398,8 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
       paramRow('Meses de subsídio pagos por ano', sp.meses),
       paramRow('Isenção cartão refeição', eur2(sp.iscartao) + '/dia'),
       paramRow('Isenção dinheiro/transferência', eur2(sp.isdinheiro) + '/dia'),
+      paramRow('Comissão do cartão refeição', pct(sp.cardcom * 100) + ' do carregado'),
+      paramRow('Custo anual do cartão refeição', eur2(sp.cardfee)),
       paramRow('Dedução específica cat. A', eur(sp.dedA)),
       paramRow('SS trabalhador', pct(sp.sstrab * 100)),
       paramRow('SS patronal', pct(sp.sspat * 100)),
@@ -1366,10 +1426,6 @@ svg.mchart .bar-sub { fill: var(--sal-sub); }
   $('btn-print').addEventListener('click', () => { preparePrint(); window.print(); });
 })();
 </script>
-<div class="sticky-verdict" id="sticky-verdict" aria-hidden="true">
-  <span class="sv-who" id="sv-who"></span>
-  <span class="sv-amt mono" id="sv-amt"></span>
-</div>
 <a class="fab" href="mailto:info@sousadev.com?subject=Feedback%20%E2%80%94%20Simulador%20recibos%20verdes%20vs.%20empresa" data-vmtrc="Feedback" aria-label="Reportar um bug ou enviar feedback por email">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H7l-3 3z"/><path d="M8 9h8M8 12h5"/></svg>
   <span>Bug ou feedback?</span>
