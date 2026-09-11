@@ -1,0 +1,10 @@
+# Local secrets — never commit
+.vemetric-secret
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

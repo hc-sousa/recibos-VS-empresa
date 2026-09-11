@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Simulador fiscal português: recibos verdes (regime simplificado) vs. sociedade unipessoal. Compara lucro total, simula o salário do gerente e exporta um PDF para o contabilista.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧾</text></svg>">
+<!-- Vemetric analytics (public project token; the private API key is NOT in this repo) -->
+<script>
+  window.vmtrcq = window.vmtrcq || [];
+  window.vmtrc = window.vmtrc || function (){window.vmtrcq.push(Array.prototype.slice.call(arguments))};
+</script>
+<script defer src="https://cdn.vemetric.com/main.js" id="vmtrc-scr" data-token="xJgulSgiWwG0T8TM"></script>
+<title>Recibos verdes ou unipessoal? — Simulador fiscal PT</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f5f7f6;
+  --panel: #ffffff;
+  --panel-2: #eef2f0;
+  --line: #d5dcd8;
+  --line-strong: #aeb9b3;
+  --ink: #16211c;
+  --ink-2: #4f5f58;
+  --ink-3: #7d8c85;
+  --rv: #2a78d6;
+  --rv-soft: #e2edfa;
+  --emp: #eb6834;
+  --emp-soft: #fdeae1;
+  --neg: #b23a3a;
+  --sal-sub: #1baf7a;
+  --focus: #2a78d6;
+  --shadow: 0 1px 2px rgba(22,33,28,.06), 0 8px 24px -12px rgba(22,33,28,.18);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #121715;
+    --panel: #1a211e;
+    --panel-2: #222b27;
+    --line: #2f3b36;
+    --line-strong: #46554f;
+    --ink: #eef2f0;
+    --ink-2: #b4c0ba;
+    --ink-3: #7f8d86;
+    --rv: #3987e5;
+    --rv-soft: #1b2a3d;
+    --emp: #d95926;
+    --emp-soft: #3a2419;
+    --neg: #ee7b7b;
+    --sal-sub: #199e70;
+    --focus: #3987e5;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121715;
+  --panel: #1a211e;
+  --panel-2: #222b27;
+  --line: #2f3b36;
+  --line-strong: #46554f;
+  --ink: #eef2f0;
+  --ink-2: #b4c0ba;
+  --ink-3: #7f8d86;
+  --rv: #3987e5;
+  --rv-soft: #1b2a3d;
+  --emp: #d95926;
+  --emp-soft: #3a2419;
+  --neg: #ee7b7b;
+  --focus: #3987e5;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.mono { font-family: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace; font-variant-numeric: tabular-nums; }
+h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 600; letter-spacing: -.01em; }
+h1 { font-size: 1.7rem; line-height: 1.2; }
+h2 { font-size: 1.05rem; }
+h3 { font-size: .95rem; }
+p { margin: 0; }
+.eyebrow {
+  font-size: .68rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3);
+}
+a { color: var(--rv); }
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 32px 20px 64px; }
+header.top { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+header.top p { color: var(--ink-2); max-width: 68ch; }
+.top-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.export-btn {
+  font: inherit; font-size: .82rem; font-weight: 500; color: var(--ink); background: var(--panel);
+  border: 1px solid var(--line-strong); border-radius: 7px; padding: 7px 13px; cursor: pointer; white-space: nowrap;
+}
+.export-btn:hover { border-color: var(--ink-3); }
+.export-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.print-header { display: none; }
+.print-params { display: none; }
+
+.layout { display: grid; grid-template-columns: 360px 1fr; gap: 24px; align-items: start; }
+@media (max-width: 920px) { .layout { grid-template-columns: 1fr; } .inputs { position: static !important; } }
+
+/* ---------- inputs ---------- */
+.inputs {
+  position: sticky; top: 16px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: var(--shadow); padding: 18px 18px 8px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.group { padding: 10px 0 14px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 14px; }
+.group:last-child { border-bottom: 0; }
+.group-title { display: flex; align-items: center; gap: 8px; }
+.swatch { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.swatch.rv { background: var(--rv); } .swatch.emp { background: var(--emp); }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.field label { font-size: .86rem; font-weight: 500; color: var(--ink); }
+.field .val { font-size: .95rem; font-weight: 500; }
+.field .hint { font-size: .76rem; color: var(--ink-3); line-height: 1.4; }
+input[type=range] { width: 100%; accent-color: var(--ink-2); margin: 0; cursor: pointer; }
+input[type=range]:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; border-radius: 4px; }
+select, input[type=number] {
+  font: inherit; font-size: .88rem; color: var(--ink); background: var(--panel-2);
+  border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; width: 100%;
+}
+select:focus-visible, input[type=number]:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.check { display: flex; align-items: flex-start; gap: 9px; font-size: .86rem; cursor: pointer; }
+.check input { margin: 4px 0 0; accent-color: var(--rv); }
+.check .hint { display: block; font-size: .76rem; color: var(--ink-3); }
+details.adv summary { cursor: pointer; font-size: .82rem; color: var(--ink-2); font-weight: 500; list-style: none; display: flex; align-items: center; gap: 6px; }
+details.adv summary::before { content: "▸"; font-size: .7rem; transition: transform .15s; }
+details.adv[open] summary::before { transform: rotate(90deg); }
+@media (prefers-reduced-motion: reduce) { details.adv summary::before { transition: none; } }
+.adv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.adv-grid .field label { font-size: .78rem; }
+
+/* ---------- results ---------- */
+.results { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+
+.verdict {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
+  padding: 20px 22px; display: grid; grid-template-columns: 1fr auto; gap: 18px; align-items: center;
+}
+@media (max-width: 640px) { .verdict { grid-template-columns: 1fr; } }
+.verdict .lead { font-size: 1.25rem; font-weight: 600; line-height: 1.3; text-wrap: balance; }
+.verdict .lead .who { padding: 1px 8px; border-radius: 5px; }
+.verdict .lead .who.rv { background: var(--rv-soft); color: var(--rv); }
+.verdict .lead .who.emp { background: var(--emp-soft); color: var(--emp); }
+.verdict .sub { color: var(--ink-2); margin-top: 6px; font-size: .9rem; max-width: 60ch; }
+.verdict .delta { text-align: right; }
+.verdict .delta .n { font-size: 2rem; font-weight: 500; line-height: 1; }
+.verdict .delta .l { font-size: .74rem; color: var(--ink-3); margin-top: 6px; }
+
+.breakeven {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 22px; display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 12px 28px; align-items: center;
+}
+@media (max-width: 640px) { .breakeven { grid-template-columns: 1fr; } }
+.breakeven .be-num { display: flex; flex-direction: column; gap: 4px; }
+.breakeven .be-num .n { font-size: 1.9rem; font-weight: 500; line-height: 1.1; color: var(--emp); }
+.breakeven .be-num .l { font-size: .74rem; color: var(--ink-3); }
+.breakeven .be-text { font-size: .9rem; color: var(--ink-2); max-width: 62ch; }
+
+.compare { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 760px) { .compare { grid-template-columns: 1fr; } }
+.ledger {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; min-width: 0;
+}
+.ledger table { table-layout: fixed; }
+.ledger td:first-child { overflow-wrap: anywhere; }
+.ledger td:last-child { width: 30%; }
+.ledger .head {
+  padding: 14px 18px 12px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px;
+  border-top: 3px solid var(--line-strong);
+}
+.ledger.rv .head { border-top-color: var(--rv); }
+.ledger.emp .head { border-top-color: var(--emp); }
+.ledger .head h2 { font-size: 1rem; }
+.ledger .head .sub { font-size: .8rem; color: var(--ink-3); }
+.ledger table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+.ledger td { padding: 7px 18px; vertical-align: top; }
+.ledger td:last-child { text-align: right; white-space: nowrap; }
+.ledger tr.neg td:last-child { color: var(--neg); }
+.ledger tr.sub td { padding-top: 10px; font-weight: 600; border-top: 1px solid var(--line); }
+.ledger tr.note td { color: var(--ink-3); font-size: .76rem; padding-top: 0; padding-bottom: 8px; }
+.ledger tr.total td { border-top: 2px solid var(--ink); padding-top: 10px; padding-bottom: 14px; font-weight: 600; font-size: .95rem; }
+.ledger tr.total td:last-child { font-size: 1.05rem; }
+.ledger tr.aux td { color: var(--ink-2); font-size: .8rem; background: var(--panel-2); padding-top: 9px; padding-bottom: 9px; }
+.ledger .hd td { padding-top: 12px; }
+.ledger .hd .eyebrow { color: var(--ink-3); }
+.warn { display: none; margin: 0 18px 14px; padding: 9px 12px; border-radius: 6px; font-size: .8rem;
+  background: var(--emp-soft); color: var(--ink); border: 1px solid var(--emp); }
+.warn.on { display: block; }
+
+/* ---------- chart ---------- */
+.chart-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 18px 8px; }
+.chart-card .top { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 4px; }
+.chart-card .top p { font-size: .82rem; color: var(--ink-2); max-width: 60ch; }
+.legend { display: flex; gap: 16px; font-size: .8rem; color: var(--ink-2); flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 2px; display: inline-block; border-radius: 1px; }
+.legend i.rv { background: var(--rv); } .legend i.emp { background: var(--emp); }
+.chart-wrap { position: relative; overflow-x: auto; }
+svg.chart { width: 100%; height: auto; display: block; font-family: "IBM Plex Mono", monospace; }
+svg.chart text { fill: var(--ink-3); font-size: 11px; }
+svg.chart .grid { stroke: var(--line); stroke-width: 1; }
+svg.chart .axis { stroke: var(--line-strong); stroke-width: 1; }
+svg.chart .line-rv { stroke: var(--rv); fill: none; stroke-width: 2; stroke-linejoin: round; }
+svg.chart .line-emp { stroke: var(--emp); fill: none; stroke-width: 2; stroke-linejoin: round; }
+svg.chart .end-label { font-size: 11px; font-weight: 500; }
+svg.chart .end-label.rv { fill: var(--rv); } svg.chart .end-label.emp { fill: var(--emp); }
+svg.chart .cur { stroke: var(--ink-3); stroke-dasharray: 3 3; }
+svg.chart .be-dot { fill: var(--panel); stroke: var(--ink); stroke-width: 1.5; }
+svg.chart .be-text { fill: var(--ink); font-weight: 500; }
+svg.chart .xhair { stroke: var(--ink-2); stroke-width: 1; opacity: 0; }
+svg.chart .hdot { stroke: var(--panel); stroke-width: 2; opacity: 0; }
+.tip {
+  position: absolute; pointer-events: none; opacity: 0; transition: opacity .1s;
+  background: var(--panel); border: 1px solid var(--line-strong); border-radius: 6px; padding: 8px 10px;
+  font-size: .78rem; box-shadow: var(--shadow); white-space: nowrap; color: var(--ink);
+}
+.tip .t { font-weight: 600; margin-bottom: 4px; }
+.tip .r { display: flex; justify-content: space-between; gap: 14px; }
+.tip .r i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; margin-right: 6px; }
+.chart-foot { font-size: .78rem; color: var(--ink-3); padding: 8px 0 6px; }
+
+/* ---------- notes ---------- */
+.notes { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px 32px; }
+@media (max-width: 760px) { .notes { grid-template-columns: 1fr; } }
+.notes h3 { margin-bottom: 8px; }
+.notes ul { margin: 0; padding-left: 18px; font-size: .84rem; color: var(--ink-2); display: flex; flex-direction: column; gap: 5px; }
+.notes li b { color: var(--ink); font-weight: 500; }
+.notes .full { grid-column: 1 / -1; }
+.disclaimer { font-size: .8rem; color: var(--ink-3); border-top: 1px solid var(--line); padding-top: 14px; grid-column: 1 / -1; }
+
+/* ---------- tabs ---------- */
+.tabbar { display: flex; gap: 4px; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
+.tabbar button {
+  font: inherit; font-size: .88rem; font-weight: 500; color: var(--ink-2); background: none; border: none;
+  padding: 10px 4px; margin-right: 18px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.tabbar button:hover { color: var(--ink); }
+.tabbar button.active { color: var(--ink); border-bottom-color: var(--rv); }
+.tabbar button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+[data-tabpanel][hidden] { display: none !important; }
+
+/* ---------- salary tab ---------- */
+.sal-layout { display: grid; grid-template-columns: 360px 1fr; gap: 24px; align-items: start; }
+@media (max-width: 920px) { .sal-layout { grid-template-columns: 1fr; } .sal-layout .inputs { position: static !important; } }
+.sal-layout .results { gap: 18px; }
+
+.stat-hero {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
+  padding: 20px 22px; display: flex; flex-wrap: wrap; gap: 20px 40px; align-items: baseline;
+}
+.stat-hero .item { display: flex; flex-direction: column; gap: 4px; }
+.stat-hero .item .n { font-size: 1.7rem; font-weight: 500; }
+.stat-hero .item .l { font-size: .74rem; color: var(--ink-3); }
+.stat-hero .item.primary .n { color: var(--rv); font-size: 2rem; }
+.stat-hero .item.lock-item { gap: 8px; margin-left: auto; }
+.lock-btn {
+  font: inherit; font-size: .84rem; font-weight: 500; color: var(--panel); background: var(--rv);
+  border: 1px solid var(--rv); border-radius: 7px; padding: 9px 14px; cursor: pointer; white-space: nowrap;
+}
+.lock-btn:hover { filter: brightness(1.08); }
+.lock-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.lock-btn.done { background: var(--panel); color: var(--rv); }
+.lock-btn.done::before { content: "✓ "; }
+
+.sched-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 760px) { .sched-compare { grid-template-columns: 1fr; } }
+.sched-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.sched-card .head { padding: 12px 18px; border-bottom: 1px solid var(--line); border-top: 3px solid var(--line-strong); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.sched-card.pick .head { border-top-color: var(--rv); }
+.sched-card .head h3 { font-size: .92rem; }
+.sched-card .head .tag { font-size: .68rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--rv); }
+.sched-card table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.sched-card td { padding: 6px 18px; }
+.sched-card td:last-child { text-align: right; white-space: nowrap; }
+.sched-card tr.total td { border-top: 1px solid var(--line); padding-top: 9px; padding-bottom: 11px; font-weight: 600; }
+
+.insight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 760px) { .insight-grid { grid-template-columns: 1fr; } }
+.insight-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+.insight-card h3 { font-size: .92rem; }
+.insight-card table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+.insight-card td { padding: 5px 0; }
+.insight-card td:last-child { text-align: right; white-space: nowrap; }
+.insight-card tr.total td { border-top: 1px solid var(--line); padding-top: 8px; font-weight: 600; }
+.insight-card tr.neg td:last-child { color: var(--neg); }
+.insight-card p.note { font-size: .8rem; color: var(--ink-2); }
+.insight-card p.hero-save { font-size: 1.1rem; font-weight: 500; color: var(--rv); }
+
+.mchart-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 18px 8px; }
+.mchart-card .top { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 8px; }
+.mchart-card .top p { font-size: .82rem; color: var(--ink-2); }
+svg.mchart { width: 100%; height: auto; display: block; font-family: "IBM Plex Mono", monospace; }
+svg.mchart text { fill: var(--ink-3); font-size: 11px; }
+svg.mchart .grid { stroke: var(--line); stroke-width: 1; }
+svg.mchart .bar-sal { fill: var(--emp); }
+svg.mchart .bar-sub { fill: var(--sal-sub); }
+
+/* ---------- print / PDF export ---------- */
+@media print {
+  @page { margin: 14mm; }
+  :root {
+    --bg: #ffffff !important; --panel: #ffffff !important; --panel-2: #f2f2f2 !important;
+    --line: #cccccc !important; --line-strong: #999999 !important;
+    --ink: #000000 !important; --ink-2: #333333 !important; --ink-3: #555555 !important;
+    --rv: #1a4f8a !important; --rv-soft: #eef2f6 !important; --emp: #a8481f !important; --emp-soft: #f5ede8 !important;
+    --neg: #8a2222 !important; --sal-sub: #0e6b47 !important; --shadow: none !important;
+  }
+  body { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-size: 11.5px; }
+  .top-row .export-btn, .tabbar, input[type=range], .lock-item #lock-sal, .tip, .mtip { display: none !important; }
+  .inputs { display: none !important; }
+  .layout, .sal-layout { display: block !important; }
+  .compare, .sched-compare, .insight-grid, .notes { grid-template-columns: 1fr !important; }
+  .stat-hero { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .print-header { display: block !important; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 16px; }
+  .print-header .t1 { font-size: 1.2rem; font-weight: 600; }
+  .print-header .t2 { font-size: .82rem; color: #444; margin-top: 3px; }
+  .print-params { display: block !important; background: #fafafa; border: 1px solid #ccc; border-radius: 6px; padding: 12px 16px; margin-bottom: 18px; break-inside: avoid; }
+  .print-params h3 { font-size: .88rem; margin-bottom: 8px; }
+  .print-params table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  .print-params td { padding: 3px 6px; border-bottom: 1px solid #ddd; }
+  .print-params td:first-child { color: #444; }
+  .print-params td:last-child { text-align: right; font-weight: 600; white-space: nowrap; }
+  .ledger, .sched-card, .insight-card, .chart-card, .mchart-card, .verdict, .breakeven, .stat-hero { break-inside: avoid; border: 1px solid #999 !important; }
+  h1 { font-size: 1.4rem; }
+  a[href]::after { content: ""; }
+  .fab { display: none !important; }
+}
+
+/* ---------- feedback FAB ---------- */
+.fab {
+  position: fixed; right: 20px; bottom: 20px; z-index: 50;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: .84rem; font-weight: 500; color: #fff; background: var(--rv); text-decoration: none;
+  border-radius: 999px; padding: 11px 16px 11px 14px; box-shadow: 0 4px 16px -4px rgba(0,0,0,.35);
+}
+.fab:hover { filter: brightness(1.08); }
+.fab:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.fab svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 640px) { .fab span { display: none; } .fab { padding: 12px; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="top-row">
+      <span class="eyebrow">Simulador fiscal · Portugal · ano fiscal 2026</span>
+      <button type="button" id="btn-print" class="export-btn" data-vmtrc="ExportPDF" title="Abre o diálogo de impressão do navegador — escolhe &quot;Guardar como PDF&quot; no destino.">⭳ Exportar PDF para o contabilista</button>
+    </div>
+    <h1>Recibos verdes ou sociedade unipessoal?</h1>
+    <p>Compara o lucro total que ficas a ganhar por ano em cada regime — conta pessoal <b>e</b> lucro retido na empresa (é teu na mesma, mesmo que ainda não esteja na tua conta). As despesas reais entram nas duas colunas — em recibos verdes não baixam o IRS (regime simplificado), mas saem na mesma do teu bolso.</p>
+  </header>
+
+  <div class="print-header" id="print-header" aria-hidden="true"></div>
+
+  <div class="tabbar" role="tablist">
+    <button class="tab active" id="tabbtn-compare" role="tab" aria-selected="true" aria-controls="tab-compare" data-vmtrc="TabSwitch" data-vmtrc-tab="compare">Recibos verdes vs. empresa</button>
+    <button class="tab" id="tabbtn-salary" role="tab" aria-selected="false" aria-controls="tab-salary" data-vmtrc="TabSwitch" data-vmtrc-tab="salary">Salário do gerente</button>
+  </div>
+
+  <div class="layout" id="tab-compare" data-tabpanel role="tabpanel" aria-labelledby="tabbtn-compare">
+    <aside class="inputs" aria-label="Parâmetros da simulação">
+
+      <div class="group">
+        <div class="group-title"><span class="eyebrow">Comum aos dois regimes</span></div>
+        <div class="field">
+          <div class="row"><label for="fat">Faturação bruta anual (sem IVA)</label><span class="val mono" id="fat-v"></span></div>
+          <input type="range" id="fat" min="10000" max="300000" step="1000" value="40000">
+        </div>
+        <div class="field">
+          <div class="row"><label for="desp">Despesas reais anuais da atividade</label><span class="val mono" id="desp-v"></span></div>
+          <input type="range" id="desp" min="0" max="150000" step="500" value="5000">
+          <span class="hint">Software, equipamento, deslocações, escritório… Custo real do negócio, igual nos dois cenários.</span>
+        </div>
+        <div class="field">
+          <label for="ativ">Tipo de atividade</label>
+          <select id="ativ">
+            <option value="serv75" selected>Prestação de serviços (tabela art. 151.º) — coef. 0,75</option>
+            <option value="serv35">Outras prestações de serviços — coef. 0,35</option>
+            <option value="bens15">Venda de mercadorias / produtos — coef. 0,15</option>
+          </select>
+          <span class="hint">Define o coeficiente de IRS e a base de Segurança Social (70% serviços · 20% vendas).</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title"><span class="swatch rv"></span><span class="eyebrow">Recibos verdes</span></div>
+        <label class="check"><input type="checkbox" id="ssex"><span>Primeiro ano de atividade<span class="hint">Isenção de contribuições à Segurança Social nos primeiros 12 meses.</span></span></label>
+      </div>
+
+      <div class="group">
+        <div class="group-title"><span class="swatch emp"></span><span class="eyebrow">Sociedade unipessoal</span></div>
+        <div class="field">
+          <div class="row"><label for="sal">Salário bruto mensal do gerente</label><span class="val mono" id="sal-v"></span></div>
+          <input type="range" id="sal" min="0" max="6000" step="50" value="1200">
+          <span class="hint">×14 meses. Mesmo com salário 0, o gerente desconta SS sobre uma base mínima de 1 IAS (522,50 €/mês) — está contabilizado. Queres partir de um líquido específico? Calcula-o na aba "Salário do gerente" e fixa-o aqui.</span>
+        </div>
+        <div class="field">
+          <div class="row"><label for="div">Lucro distribuído como dividendos</label><span class="val mono" id="div-v"></span></div>
+          <input type="range" id="div" min="0" max="100" step="5" value="70">
+          <span class="hint">O resto fica retido na empresa (é teu, mas não está na conta pessoal).</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title"><span class="swatch emp"></span><span class="eyebrow">Custos que só existem com empresa</span></div>
+        <div class="field">
+          <div class="row"><label for="cont">Contabilista certificado (anual)</label><span class="val mono" id="cont-v"></span></div>
+          <input type="range" id="cont" min="0" max="6000" step="100" value="1500">
+          <span class="hint">Obrigatório numa sociedade. Tipicamente 80–200 €/mês para uma unipessoal pequena.</span>
+        </div>
+        <div class="field">
+          <div class="row"><label for="banco">Conta bancária empresarial (anual)</label><span class="val mono" id="banco-v"></span></div>
+          <input type="range" id="banco" min="0" max="1200" step="20" value="240">
+          <span class="hint">Comissões de manutenção, cartão e transferências. 10–30 €/mês é o habitual.</span>
+        </div>
+        <div class="field">
+          <div class="row"><label for="outros">Outros custos fixos da empresa (anual)</label><span class="val mono" id="outros-v"></span></div>
+          <input type="range" id="outros" min="0" max="3000" step="50" value="350">
+          <span class="hint">Seguro de acidentes de trabalho do gerente, software de faturação certificado, certidões, registo anual…</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <details class="adv">
+          <summary>Taxas e parâmetros avançados</summary>
+          <div class="adv-grid">
+            <div class="field"><label for="p-ssti">SS trabalhador indep. %</label><input type="number" id="p-ssti" value="21.4" step="0.1" min="0" max="40"></div>
+            <div class="field"><label for="p-dedb">Dedução específica cat. B €</label><input type="number" id="p-dedb" value="4104" step="1" min="0"></div>
+            <div class="field"><label for="p-irc1">IRC até 50 k€ (PME) %</label><input type="number" id="p-irc1" value="15" step="0.5" min="0" max="40"></div>
+            <div class="field"><label for="p-irc2">IRC acima de 50 k€ %</label><input type="number" id="p-irc2" value="19" step="0.5" min="0" max="40"></div>
+            <div class="field"><label for="p-der">Derrama municipal %</label><input type="number" id="p-der" value="1.5" step="0.1" min="0" max="1.5"></div>
+            <div class="field"><label for="p-divr">Retenção dividendos %</label><input type="number" id="p-divr" value="28" step="0.5" min="0" max="50"></div>
+            <div class="field"><label for="p-sspat">SS patronal %</label><input type="number" id="p-sspat" value="23.75" step="0.05" min="0" max="40"></div>
+            <div class="field"><label for="p-sstrab">SS trabalhador %</label><input type="number" id="p-sstrab" value="11" step="0.5" min="0" max="20"></div>
+          </div>
+        </details>
+      </div>
+    </aside>
+
+    <main class="results">
+      <div class="print-params" id="print-params-compare"></div>
+
+      <section class="verdict" aria-live="polite">
+        <div>
+          <div class="lead" id="v-lead"></div>
+          <p class="sub" id="v-sub"></p>
+        </div>
+        <div class="delta">
+          <div class="n mono" id="v-delta"></div>
+          <div class="l">diferença anual de lucro total</div>
+        </div>
+      </section>
+
+      <section class="breakeven">
+        <div class="be-num">
+          <span class="eyebrow">Dá mais lucro total abrir empresa se as tuas despesas reais forem mais de</span>
+          <div class="n mono" id="be-desp"></div>
+          <span class="l">por ano, com a faturação e o salário definidos à esquerda</span>
+        </div>
+        <p class="be-text" id="be-desp-t"></p>
+      </section>
+
+      <section class="compare">
+        <article class="ledger rv">
+          <div class="head">
+            <h2>Recibos verdes</h2>
+            <span class="sub">Trabalhador independente · categoria B · regime simplificado</span>
+          </div>
+          <table id="t-rv"></table>
+        </article>
+        <article class="ledger emp">
+          <div class="head">
+            <h2>Sociedade unipessoal</h2>
+            <span class="sub">Lda. unipessoal · sócio-gerente · regime geral de IRC</span>
+          </div>
+          <table id="t-emp"></table>
+          <div class="warn" id="emp-warn"></div>
+        </article>
+      </section>
+
+      <section class="chart-card">
+        <div class="top">
+          <div>
+            <h2>A partir de que faturação compensa a empresa?</h2>
+            <p>Lucro total por ano (conta pessoal + retido na empresa) em função da faturação, mantendo os restantes parâmetros como estão à esquerda.</p>
+          </div>
+          <div class="legend"><span><i class="rv"></i>Recibos verdes</span><span><i class="emp"></i>Sociedade unipessoal (total)</span></div>
+        </div>
+        <div class="chart-wrap">
+          <svg class="chart" id="chart" viewBox="0 0 860 340" role="img" aria-label="Lucro total por faturação, nos dois regimes"></svg>
+          <div class="tip" id="tip"></div>
+        </div>
+        <div class="chart-foot" id="chart-foot"></div>
+      </section>
+
+      <section class="notes">
+        <div>
+          <h3>Como está calculado — recibos verdes</h3>
+          <ul>
+            <li><b>Segurança Social:</b> 21,4% sobre o rendimento relevante (70% da faturação em serviços, 20% em vendas). Aproximação anual do apuramento trimestral; ignora a base mínima e o teto de 12 × IAS.</li>
+            <li><b>Rendimento tributável:</b> faturação × coeficiente (art. 31.º CIRS). As despesas reais <b>não</b> entram — o coeficiente já presume uma dedução fixa.</li>
+            <li><b>Dedução específica:</b> ao rendimento tributável deduz-se 4.104 € ou, se superior, a SS efetivamente paga (art. 31.º n.º 13). Muitos simuladores esquecem-na e sobrestimam o IRS.</li>
+            <li><b>IRS:</b> escalões progressivos em vigor, contribuinte solteiro sem dependentes.</li>
+            <li><b>No bolso:</b> faturação − SS − IRS − <b>despesas reais</b>.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Como está calculado — unipessoal</h3>
+          <ul>
+            <li><b>Salário do gerente:</b> ×14; SS patronal 23,75% (custo da empresa) e SS do trabalhador 11% (descontado no salário); IRS categoria A com dedução específica de 4.104 €. Com salário abaixo de 1 IAS, a empresa paga na mesma 34,75% sobre a base mínima.</li>
+            <li><b>Custos só da empresa:</b> contabilista, conta bancária e fixos (seguro AT, software, certidões) — não existem em recibos verdes e entram sempre na comparação e no ponto de equilíbrio.</li>
+            <li><b>Lucro tributável:</b> faturação − salário bruto − SS patronal − despesas reais − custos só da empresa.</li>
+            <li><b>IRC:</b> 15% até 50 k€ (PME) e 19% acima, + derrama municipal até 1,5%.</li>
+            <li><b>Dividendos:</b> a parte distribuída do lucro líquido paga 28% de retenção liberatória.</li>
+            <li><b>Lucro total:</b> salário líquido + dividendos líquidos + lucro retido. O retido conta como teu (a empresa é tua), mas fica dentro da sociedade — não é dinheiro na tua conta pessoal já hoje.</li>
+          </ul>
+        </div>
+        <div class="full">
+          <h3>O que fica de fora</h3>
+          <ul>
+            <li>Deduções à coleta (saúde, educação, habitação, dependentes), quociente conjugal, mínimo de existência, IRS Jovem e outros rendimentos do agregado.</li>
+            <li>IVA (assume-se que é neutro ou que há isenção do art. 53.º), retenções na fonte e pagamentos por conta — afetam a tesouraria, não o imposto final.</li>
+            <li>Na empresa: tributações autónomas (viaturas, representação) e custos de constituição (~360 € na Empresa na Hora). <b>O lucro retido aqui é contado ao valor facial</b> — quando um dia o levantares como dividendo extra, pagas mais 28% nessa altura, o que este simulador não desconta antecipadamente.</li>
+            <li>Em recibos verdes: opção pela contabilidade organizada (obrigatória acima de 200 k€), que permitiria deduzir despesas reais.</li>
+          </ul>
+        </div>
+        <p class="disclaimer">Valores aproximados para orientação inicial. Não substitui a análise de um contabilista certificado, que deve validar o teu caso concreto (CAE, município, situação familiar, histórico de SS) antes de qualquer decisão.</p>
+      </section>
+    </main>
+  </div>
+
+  <div class="sal-layout" id="tab-salary" data-tabpanel hidden role="tabpanel" aria-labelledby="tabbtn-salary">
+    <aside class="inputs" aria-label="Parâmetros do salário">
+      <div class="group">
+        <div class="group-title"><span class="eyebrow">Quanto queres receber</span></div>
+        <div class="field">
+          <div class="row"><label for="sal2-net">Líquido por pagamento mensal</label><span class="val mono" id="sal2-net-v"></span></div>
+          <input type="range" id="sal2-net" min="500" max="4000" step="25" value="1500">
+          <span class="hint">O valor que queres ver entrar na conta em cada mês "normal".</span>
+        </div>
+        <div class="field">
+          <label for="sal2-sched">Modalidade de pagamento</label>
+          <select id="sal2-sched">
+            <option value="12" selected>Duodécimos — mesmo valor todos os meses</option>
+            <option value="14">14 meses — subsídios de férias e Natal à parte, em junho e dezembro</option>
+          </select>
+          <span class="hint">Duodécimos reparte os subsídios pelos 12 meses; 14 meses paga-os de uma vez em junho/dezembro. O total anual é diferente para o mesmo valor mensal — ver comparação à direita.</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title"><span class="swatch" style="background:var(--sal-sub)"></span><span class="eyebrow">Subsídio de alimentação</span></div>
+        <div class="field">
+          <div class="row"><label for="sal2-subd">Valor diário</label><span class="val mono" id="sal2-subd-v"></span></div>
+          <input type="range" id="sal2-subd" min="0" max="12" step="0.1" value="8">
+        </div>
+        <div class="field">
+          <label for="sal2-summ">Modalidade</label>
+          <select id="sal2-summ">
+            <option value="cartao" selected>Cartão / vale refeição — isento até 10,20 €/dia</option>
+            <option value="dinheiro">Transferência / dinheiro — isento até 6,00 €/dia</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="row"><label for="sal2-dias">Dias úteis por mês</label><span class="val mono" id="sal2-dias-v"></span></div>
+          <input type="range" id="sal2-dias" min="15" max="23" step="1" value="22">
+        </div>
+        <div class="field">
+          <div class="row"><label for="sal2-meses">Meses pagos por ano</label><span class="val mono" id="sal2-meses-v"></span></div>
+          <input type="range" id="sal2-meses" min="0" max="12" step="1" value="11">
+          <span class="hint">Muitas empresas não pagam no mês de férias — ajusta se for o teu caso.</span>
+        </div>
+      </div>
+
+      <div class="group">
+        <details class="adv">
+          <summary>Taxas e parâmetros avançados</summary>
+          <div class="adv-grid">
+            <div class="field"><label for="sal2-iscartao">Isenção cartão €/dia</label><input type="number" id="sal2-iscartao" value="10.2" step="0.1" min="0"></div>
+            <div class="field"><label for="sal2-isdinheiro">Isenção dinheiro €/dia</label><input type="number" id="sal2-isdinheiro" value="6" step="0.1" min="0"></div>
+            <div class="field"><label for="sal2-deda">Dedução específica cat. A €</label><input type="number" id="sal2-deda" value="4104" step="1" min="0"></div>
+            <div class="field"><label for="sal2-sstrab">SS trabalhador %</label><input type="number" id="sal2-sstrab" value="11" step="0.5" min="0" max="20"></div>
+            <div class="field"><label for="sal2-sspat">SS patronal %</label><input type="number" id="sal2-sspat" value="23.75" step="0.05" min="0" max="40"></div>
+          </div>
+        </details>
+      </div>
+    </aside>
+
+    <main class="results">
+      <div class="print-params" id="print-params-salary"></div>
+
+      <div class="stat-hero" aria-live="polite">
+        <div class="item primary">
+          <span class="n mono" id="h-bruto"></span>
+          <span class="l">bruto mensal necessário, na modalidade escolhida</span>
+        </div>
+        <div class="item">
+          <span class="n mono" id="h-custo"></span>
+          <span class="l">custo total anual para a empresa (salário + SS + subsídio)</span>
+        </div>
+        <div class="item">
+          <span class="n mono" id="h-liq"></span>
+          <span class="l">recebes líquido, por mês, salário + subsídio</span>
+        </div>
+        <div class="item lock-item">
+          <button type="button" id="lock-sal" class="lock-btn" data-vmtrc="LockSalary">Usar este salário no comparador</button>
+          <span class="l" id="lock-status"></span>
+        </div>
+      </div>
+
+      <section>
+        <h2 style="margin-bottom:10px">Duodécimos ou 14 meses, para o mesmo líquido mensal?</h2>
+        <div class="sched-compare">
+          <article class="sched-card" id="sched-12">
+            <div class="head"><h3>Duodécimos</h3><span class="tag" id="tag-12"></span></div>
+            <table id="t-sched-12"></table>
+          </article>
+          <article class="sched-card" id="sched-14">
+            <div class="head"><h3>14 meses</h3><span class="tag" id="tag-14"></span></div>
+            <table id="t-sched-14"></table>
+          </article>
+        </div>
+      </section>
+
+      <section class="mchart-card">
+        <div class="top">
+          <div>
+            <h2>Dinheiro na tua conta, mês a mês</h2>
+            <p id="mchart-sub"></p>
+          </div>
+          <div class="legend"><span><i style="background:var(--emp)"></i>Salário líquido</span><span><i style="background:var(--sal-sub)"></i>Subsídio de alimentação</span></div>
+        </div>
+        <div class="chart-wrap">
+          <svg class="mchart" id="mchart" viewBox="0 0 860 260" role="img" aria-label="Dinheiro líquido recebido por mês"></svg>
+          <div class="tip" id="mtip"></div>
+        </div>
+      </section>
+
+      <section class="insight-grid">
+        <article class="insight-card">
+          <h3>Subsídio de alimentação — isento vs. tributado</h3>
+          <table id="t-sub"></table>
+        </article>
+        <article class="insight-card">
+          <h3>E se desses este valor como salário em vez de subsídio?</h3>
+          <p class="hero-save" id="sub-save"></p>
+          <table id="t-sub-vs-sal"></table>
+          <p class="note">O subsídio de alimentação, dentro do limite isento, não paga SS nem IRS — nem para ti, nem SS patronal para a empresa. Dar o mesmo valor líquido como salário obriga a um bruto maior, mais caro para a empresa.</p>
+        </article>
+      </section>
+
+      <section class="notes">
+        <div class="full">
+          <h3>Como está calculado — salário do gerente</h3>
+          <ul>
+            <li><b>Bruto a partir do líquido:</b> resolução inversa por bisseção — procura-se o salário bruto anual cujo líquido (bruto − SS 11% − IRS por escalões, com dedução específica de 4.104 € sobre a base após SS) iguala o líquido total pretendido (líquido por pagamento × nº de pagamentos/ano).</li>
+            <li><b>Duodécimos vs. 14 meses:</b> ambos distribuem o mesmo salário anual, mas com nº de pagamentos diferente (12 vs. 14) — para o <i>mesmo líquido por pagamento</i>, os totais anuais (e por isso o bruto e o custo) são diferentes, não comparáveis diretamente sem ajustar por isto.</li>
+            <li><b>Subsídio de alimentação:</b> isento de IRS e SS (trabalhador e entidade patronal) até 10,20 €/dia em cartão refeição ou 6,00 €/dia em dinheiro/transferência (valores de referência, confirmar os em vigor). O excedente diário é tributado como remuneração normal — a estimativa do seu impacto líquido usa a tua taxa marginal de IRS no escalão atual.</li>
+            <li><b>SS patronal:</b> 23,75% sobre o salário bruto; se o salário mensal for inferior a 1 IAS (522,50 €), aplica-se a contribuição mínima obrigatória do gerente (34,75% sobre 1 IAS), suportada pela empresa.</li>
+          </ul>
+        </div>
+      </section>
+
+      <p class="disclaimer">Cálculo do IRS por escalões anuais (não pelas tabelas de retenção na fonte mensais, que variam com a periodicidade dos pagamentos) — o valor final de imposto é o mesmo, mas a retenção mês a mês pode diferir ligeiramente do aqui apresentado. O excedente do subsídio de alimentação acima do limite isento é estimado à tua taxa marginal de IRS. Não inclui deduções à coleta pessoais nem outros rendimentos do agregado familiar.</p>
+    </main>
+  </div>
+</div>
+
+<script>
+(function () {
+  const BR = [[8059,.1325],[12160,.165],[17233,.22],[22306,.25],[28400,.32],[41629,.355],[44987,.435],[80000,.45],[Infinity,.48]];
+  function irs(x) {
+    let t = 0, lo = 0;
+    for (const [hi, r] of BR) { if (x <= lo) break; t += (Math.min(x, hi) - lo) * r; lo = hi; if (x <= hi) break; }
+    return Math.max(0, t);
+  }
+  const ATIV = { serv75: { coef: .75, ssBase: .70 }, serv35: { coef: .35, ssBase: .70 }, bens15: { coef: .15, ssBase: .20 } };
+  const IAS = 522.5;
+
+  const $ = id => document.getElementById(id);
+  const eur = n => Math.round(n).toLocaleString('pt-PT') + ' €';
+  const pct = n => (Math.round(n * 10) / 10).toLocaleString('pt-PT') + '%';
+  const num = id => parseFloat($(id).value) || 0;
+
+  function params() {
+    return {
+      fat: num('fat'), desp: num('desp'), ativ: $('ativ').value, ssex: $('ssex').checked,
+      sal: num('sal'), div: num('div') / 100, cont: num('cont'), banco: num('banco'), outros: num('outros'),
+      ssti: num('p-ssti') / 100, dedb: num('p-dedb'), irc1: num('p-irc1') / 100, irc2: num('p-irc2') / 100,
+      der: num('p-der') / 100, divr: num('p-divr') / 100, sspat: num('p-sspat') / 100, sstrab: num('p-sstrab') / 100,
+    };
+  }
+
+  function calcRV(p, fat, desp) {
+    if (desp === undefined) desp = p.desp;
+    const a = ATIV[p.ativ];
+    const ss = p.ssex ? 0 : fat * a.ssBase * p.ssti;
+    const trib = fat * a.coef;
+    const ded = Math.min(trib, Math.max(p.dedb, ss));
+    const col = Math.max(0, trib - ded);
+    const tax = irs(col);
+    const antes = fat - ss - tax;
+    const bolso = antes - desp;
+    return { fat, ss, trib, ded, col, irs: tax, antes, bolso, total: bolso, coef: a.coef, ssBase: a.ssBase };
+  }
+
+  function calcEmp(p, fat, desp) {
+    if (desp === undefined) desp = p.desp;
+    const salB = p.sal * 14;
+    const minBase = IAS * 12;
+    let ssPat, ssTrab, ssMin = false;
+    if (salB >= minBase) { ssPat = salB * p.sspat; ssTrab = salB * p.sstrab; }
+    else { ssPat = minBase * (p.sspat + p.sstrab); ssTrab = 0; ssMin = true; }
+    const colA = Math.max(0, salB - ssTrab - 4104);
+    const irsSal = irs(colA);
+    const salLiq = salB - ssTrab - irsSal;
+    const fixos = p.cont + p.banco + p.outros;
+    const lucro = fat - salB - ssPat - desp - fixos;
+    const irc = lucro > 0 ? Math.min(lucro, 50000) * p.irc1 + Math.max(0, lucro - 50000) * p.irc2 : 0;
+    const derr = lucro > 0 ? lucro * p.der : 0;
+    const lucroLiq = Math.max(0, lucro - irc - derr);
+    const divB = lucroLiq * p.div, ret = divB * p.divr, divL = divB - ret;
+    const retido = lucroLiq - divB;
+    const bolso = salLiq + divL;
+    return { fat, salB, ssPat, ssTrab, ssMin, colA, irsSal, salLiq, fixos, lucro, irc, derr, lucroLiq, divB, ret, divL, retido, bolso, total: bolso + retido };
+  }
+
+  function breakevenDesp(p) {
+    const diff = d => calcEmp(p, p.fat, d).total - calcRV(p, p.fat, d).total;
+    if (diff(0) >= 0) return { kind: 'always' };
+    if (diff(p.fat) < 0) return { kind: 'never' };
+    let lo = 0, hi = p.fat;
+    for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; if (diff(m) < 0) lo = m; else hi = m; }
+    return { kind: 'at', desp: hi };
+  }
+
+  function row(label, val, cls, note) {
+    let h = `<tr class="${cls || ''}"><td>${label}</td><td class="mono">${val}</td></tr>`;
+    if (note) h += `<tr class="note"><td colspan="2">${note}</td></tr>`;
+    return h;
+  }
+
+  function renderRV(r, p) {
+    const encargos = r.ss + r.irs;
+    $('t-rv').innerHTML =
+      row('Faturação bruta', eur(r.fat)) +
+      row(`Segurança Social (${pct(p.ssti*100)} × ${pct(r.ssBase*100)} da faturação)`, '− ' + eur(r.ss), 'neg', p.ssex ? 'Isenção do 1.º ano aplicada.' : '') +
+      `<tr class="hd"><td colspan="2"><span class="eyebrow">Apuramento do IRS</span></td></tr>` +
+      row(`Rendimento tributável (coef. ${r.coef.toLocaleString('pt-PT')})`, eur(r.trib)) +
+      row('Dedução específica (4.104 € ou SS paga)', '− ' + eur(r.ded), 'neg') +
+      row('Rendimento coletável', eur(r.col)) +
+      row('IRS', '− ' + eur(r.irs), 'neg') +
+      row('Líquido após impostos', eur(r.antes), 'sub') +
+      row('Despesas reais da atividade', '− ' + eur(p.desp), 'neg', 'Não reduzem o IRS no regime simplificado, mas são dinheiro que sai.') +
+      row('Lucro total (tudo fica contigo)', eur(r.total), 'total') +
+      row('Carga fiscal e contributiva efetiva', pct(r.fat ? encargos / r.fat * 100 : 0), 'aux');
+  }
+
+  function renderEmp(r, p) {
+    const encargos = r.ssPat + r.ssTrab + r.irsSal + r.irc + r.derr + r.ret;
+    $('t-emp').innerHTML =
+      row('Faturação bruta', eur(r.fat)) +
+      row('Salário bruto do gerente (×14)', '− ' + eur(r.salB), 'neg') +
+      (r.ssMin
+        ? row('SS do gerente (base mínima 1 IAS × 34,75%)', '− ' + eur(r.ssPat), 'neg', 'Salário abaixo de 1 IAS: a contribuição mínima é suportada pela empresa.')
+        : row(`SS patronal (${pct(p.sspat*100)})`, '− ' + eur(r.ssPat), 'neg')) +
+      row('Despesas reais da atividade', '− ' + eur(p.desp), 'neg', 'Deduzidas a 100% ao lucro.') +
+      row('Custos só da empresa (CC + banco + fixos)', '− ' + eur(r.fixos), 'neg', 'Não existem em recibos verdes — são o "bilhete de entrada" da sociedade.') +
+      row('Lucro tributável', eur(r.lucro), 'sub') +
+      row('IRC + derrama', '− ' + eur(r.irc + r.derr), 'neg') +
+      row('Lucro líquido da empresa', eur(r.lucroLiq)) +
+      `<tr class="hd"><td colspan="2"><span class="eyebrow">O que chega ao sócio-gerente</span></td></tr>` +
+      row(`Salário líquido (após SS ${pct(p.sstrab*100)} e IRS cat. A)`, eur(r.salLiq)) +
+      row(`Dividendos líquidos (${pct(p.div*100)} do lucro, − ${pct(p.divr*100)})`, eur(r.divL)) +
+      row('→ Fica na tua conta pessoal', eur(r.bolso), 'aux') +
+      row('→ Fica retido na empresa (é teu, mas ainda dentro dela)', eur(r.retido), 'aux') +
+      row('Lucro total (conta pessoal + retido)', eur(r.total), 'total') +
+      row('Carga fiscal e contributiva efetiva', pct(r.fat ? encargos / r.fat * 100 : 0), 'aux');
+    const w = $('emp-warn');
+    if (r.lucro < 0) { w.textContent = `Com esta faturação a empresa fecha o ano com prejuízo de ${eur(-r.lucro)} — o salário do gerente não é sustentável. Baixa o salário ou a faturação não chega para este modelo.`; w.classList.add('on'); }
+    else w.classList.remove('on');
+  }
+
+  function renderVerdict(rv, emp) {
+    const d = emp.total - rv.total;
+    const lead = $('v-lead'), sub = $('v-sub'), dl = $('v-delta');
+    const split = emp.retido > 0 ? ` (${eur(emp.bolso)} na conta pessoal + ${eur(emp.retido)} retidos na empresa)` : '';
+    if (Math.abs(d) < 500) {
+      lead.innerHTML = 'Neste cenário os dois regimes dão praticamente <span class="who">o mesmo</span>.';
+      sub.textContent = 'A diferença é inferior a 500 € por ano de lucro total — decide pela simplicidade administrativa, não pelo imposto.';
+    } else if (d > 0) {
+      lead.innerHTML = 'Compensa mais a <span class="who emp">sociedade unipessoal</span>';
+      sub.textContent = `Ficas com mais ${eur(d)} de lucro total por ano${split}.`;
+    } else {
+      lead.innerHTML = 'Compensa mais ficar em <span class="who rv">recibos verdes</span>';
+      sub.textContent = `Ficas com mais ${eur(-d)} de lucro total por ano — mesmo já contando com tudo o que a empresa teria${split}.`;
+    }
+    dl.textContent = (d >= 0 ? '+' : '−') + eur(Math.abs(d));
+    dl.style.color = Math.abs(d) < 500 ? 'var(--ink-2)' : d > 0 ? 'var(--emp)' : 'var(--rv)';
+  }
+
+  function renderBreakeven(p, emp) {
+    const be = breakevenDesp(p);
+    const n = $('be-desp'), t = $('be-desp-t');
+    const fixosTxt = `Os ${eur(emp.fixos)} anuais de contabilista, banco e custos fixos da empresa já estão descontados.`;
+    if (be.kind === 'always') {
+      n.textContent = '0 €';
+      t.textContent = `Com ${eur(p.fat)} de faturação e este salário, a empresa dá mais lucro total mesmo sem despesas reais — a poupança fiscal só por si paga os custos da sociedade. ${fixosTxt}`;
+    } else if (be.kind === 'never') {
+      n.textContent = '—';
+      t.textContent = `Com ${eur(p.fat)} de faturação e este salário, não há nível de despesas reais que faça a empresa dar mais lucro total: os custos fixos da sociedade e a SS do gerente comem a vantagem. Experimenta baixar o salário ou subir a faturação.`;
+    } else {
+      n.textContent = eur(be.desp);
+      t.textContent = `Com ${eur(p.fat)} de faturação, abrir empresa passa a dar mais lucro total (conta pessoal + retido) se tiveres mais de ${eur(be.desp)} por ano em despesas reais e documentadas da atividade (cerca de ${eur(be.desp / 12)} por mês). ${fixosTxt}`;
+    }
+  }
+
+  /* ---------- chart ---------- */
+  const svg = $('chart'), tip = $('tip');
+  const W = 860, H = 340, ML = 62, MR = 130, MT = 18, MB = 36;
+  const XMIN = 10000, XMAX = 200000, STEP = 2000;
+  let series = [];
+
+  function renderChart(p) {
+    series = [];
+    for (let f = XMIN; f <= XMAX; f += STEP) series.push({ f, rv: calcRV(p, f).total, emp: calcEmp(p, f).total });
+    const ys = series.flatMap(s => [s.rv, s.emp]);
+    const ymin = Math.min(0, ...ys), ymaxRaw = Math.max(...ys);
+    const stepY = ymaxRaw > 120000 ? 40000 : ymaxRaw > 60000 ? 20000 : 10000;
+    const ymax = Math.ceil(ymaxRaw / stepY) * stepY;
+    const yminR = Math.floor(ymin / stepY) * stepY;
+    const x = f => ML + (f - XMIN) / (XMAX - XMIN) * (W - ML - MR);
+    const y = v => MT + (ymax - v) / (ymax - yminR) * (H - MT - MB);
+
+    let g = '';
+    for (let v = yminR; v <= ymax; v += stepY) {
+      g += `<line class="grid" x1="${ML}" x2="${W - MR}" y1="${y(v)}" y2="${y(v)}"/>`;
+      g += `<text x="${ML - 8}" y="${y(v) + 4}" text-anchor="end">${(v / 1000).toLocaleString('pt-PT')} k€</text>`;
+    }
+    for (let f = 25000; f <= XMAX; f += 25000) {
+      g += `<text x="${x(f)}" y="${H - MB + 18}" text-anchor="middle">${f / 1000} k€</text>`;
+    }
+    g += `<line class="axis" x1="${ML}" x2="${W - MR}" y1="${y(yminR)}" y2="${y(yminR)}"/>`;
+    g += `<text x="${W - MR}" y="${H - 4}" text-anchor="end">faturação anual</text>`;
+
+    const path = k => series.map((s, i) => (i ? 'L' : 'M') + x(s.f).toFixed(1) + ' ' + y(s[k]).toFixed(1)).join(' ');
+    g += `<path class="line-rv" d="${path('rv')}"/><path class="line-emp" d="${path('emp')}"/>`;
+
+    const last = series[series.length - 1];
+    let yr = y(last.rv), ye = y(last.emp);
+    if (Math.abs(yr - ye) < 14) { const m = (yr + ye) / 2; if (yr < ye) { yr = m - 7; ye = m + 7; } else { yr = m + 7; ye = m - 7; } }
+    g += `<text class="end-label rv" x="${W - MR + 8}" y="${yr + 4}">Recibos verdes</text>`;
+    g += `<text class="end-label emp" x="${W - MR + 8}" y="${ye + 4}">Unipessoal</text>`;
+
+    const cx = Math.min(Math.max(p.fat, XMIN), XMAX);
+    g += `<line class="cur" x1="${x(cx)}" x2="${x(cx)}" y1="${MT}" y2="${y(yminR)}"/>`;
+    g += `<text x="${x(cx)}" y="${MT - 5}" text-anchor="middle">o teu cenário</text>`;
+
+    const bes = [];
+    for (let i = 1; i < series.length; i++) {
+      const a = series[i - 1], b = series[i];
+      const da = a.emp - a.rv, db = b.emp - b.rv;
+      if ((da < 0 && db >= 0) || (da > 0 && db <= 0)) {
+        const t = da / (da - db);
+        bes.push({ f: a.f + t * STEP, v: a.rv + t * (b.rv - a.rv), up: db >= 0 });
+      }
+    }
+    bes.forEach(b => {
+      g += `<circle class="be-dot" cx="${x(b.f)}" cy="${y(b.v)}" r="5"/>`;
+      g += `<text class="be-text" x="${x(b.f)}" y="${y(b.v) - 12}" text-anchor="middle">${Math.round(b.f / 1000)} k€</text>`;
+    });
+
+    g += `<line class="xhair" id="xh" x1="0" x2="0" y1="${MT}" y2="${y(yminR)}"/>`;
+    g += `<circle class="hdot" id="hd-rv" r="4.5" style="fill:var(--rv)"/><circle class="hdot" id="hd-emp" r="4.5" style="fill:var(--emp)"/>`;
+    g += `<rect id="hit" x="${ML}" y="${MT}" width="${W - ML - MR}" height="${H - MT - MB}" fill="transparent"/>`;
+    svg.innerHTML = g;
+
+    const foot = $('chart-foot');
+    if (!bes.length) {
+      const better = last.emp > last.rv ? 'a sociedade unipessoal' : 'os recibos verdes';
+      foot.textContent = `Com estes parâmetros, ${better} ficam à frente em toda a gama de 10 k€ a 200 k€.`;
+    } else {
+      foot.textContent = 'Ponto de equilíbrio: ' + bes.map(b => `${Math.round(b.f / 1000)} k€ (a partir daí ${b.up ? 'a unipessoal' : 'os recibos verdes'} ficam à frente)`).join(' · ') + '.';
+    }
+
+    const hit = $('hit'), xh = $('xh'), hr = $('hd-rv'), he = $('hd-emp');
+    const show = ev => {
+      const r = svg.getBoundingClientRect();
+      const px = (ev.clientX - r.left) * (W / r.width);
+      const f = Math.round((XMIN + (px - ML) / (W - ML - MR) * (XMAX - XMIN)) / STEP) * STEP;
+      const s = series.find(q => q.f === Math.min(Math.max(f, XMIN), XMAX));
+      if (!s) return;
+      const X = x(s.f);
+      xh.setAttribute('x1', X); xh.setAttribute('x2', X); xh.style.opacity = 1;
+      hr.setAttribute('cx', X); hr.setAttribute('cy', y(s.rv)); hr.style.opacity = 1;
+      he.setAttribute('cx', X); he.setAttribute('cy', y(s.emp)); he.style.opacity = 1;
+      tip.innerHTML = `<div class="t">Faturação ${eur(s.f)}</div><div class="r"><span><i style="background:var(--rv)"></i>Recibos verdes</span><span class="mono">${eur(s.rv)}</span></div><div class="r"><span><i style="background:var(--emp)"></i>Unipessoal</span><span class="mono">${eur(s.emp)}</span></div>`;
+      const wrap = svg.parentElement.getBoundingClientRect();
+      let tx = ev.clientX - wrap.left + 14, ty = ev.clientY - wrap.top - 10;
+      if (tx + 210 > wrap.width) tx = ev.clientX - wrap.left - 220;
+      tip.style.left = tx + 'px'; tip.style.top = ty + 'px'; tip.style.opacity = 1;
+    };
+    const hide = () => { xh.style.opacity = 0; hr.style.opacity = 0; he.style.opacity = 0; tip.style.opacity = 0; };
+    hit.addEventListener('mousemove', show); hit.addEventListener('mouseleave', hide);
+    hit.addEventListener('touchmove', ev => { show(ev.touches[0]); }, { passive: true });
+  }
+
+  function update() {
+    const p = params();
+    $('fat-v').textContent = eur(p.fat);
+    $('desp-v').textContent = eur(p.desp);
+    $('sal-v').textContent = eur(p.sal);
+    $('div-v').textContent = pct(p.div * 100);
+    $('cont-v').textContent = eur(p.cont);
+    $('banco-v').textContent = eur(p.banco);
+    $('outros-v').textContent = eur(p.outros);
+    const rv = calcRV(p, p.fat), emp = calcEmp(p, p.fat);
+    renderVerdict(rv, emp);
+    renderBreakeven(p, emp);
+    renderRV(rv, p);
+    renderEmp(emp, p);
+    renderChart(p);
+  }
+
+  document.querySelectorAll('#tab-compare input, #tab-compare select').forEach(el => el.addEventListener('input', update));
+  update();
+
+  /* ============================================================
+     TAB: Salário do gerente
+     ============================================================ */
+  const eur2 = n => (Math.round(n * 100) / 100).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+
+  function marginalRate(x) {
+    for (const [hi, r] of BR) if (x <= hi) return r;
+    return .48;
+  }
+  function netAnnualFromGross(grossAnnual, sstrab, dedA) {
+    const ssTrab = grossAnnual * sstrab;
+    const colA = Math.max(0, grossAnnual - ssTrab - dedA);
+    return grossAnnual - ssTrab - irs(colA);
+  }
+  function grossAnnualFromNetTarget(netTarget, sstrab, dedA) {
+    if (netTarget <= 0) return 0;
+    let lo = 0, hi = Math.max(netTarget * 2, 5000);
+    let guard = 0;
+    while (netAnnualFromGross(hi, sstrab, dedA) < netTarget && guard++ < 40) hi *= 1.5;
+    for (let i = 0; i < 60; i++) { const m = (lo + hi) / 2; if (netAnnualFromGross(m, sstrab, dedA) < netTarget) lo = m; else hi = m; }
+    return hi;
+  }
+
+  function salParams() {
+    return {
+      net: parseFloat($('sal2-net').value) || 0,
+      sched: $('sal2-sched').value,
+      subd: parseFloat($('sal2-subd').value) || 0,
+      summ: $('sal2-summ').value,
+      dias: parseFloat($('sal2-dias').value) || 0,
+      meses: parseFloat($('sal2-meses').value) || 0,
+      iscartao: parseFloat($('sal2-iscartao').value) || 0,
+      isdinheiro: parseFloat($('sal2-isdinheiro').value) || 0,
+      dedA: parseFloat($('sal2-deda').value) || 0,
+      sstrab: (parseFloat($('sal2-sstrab').value) || 0) / 100,
+      sspat: (parseFloat($('sal2-sspat').value) || 0) / 100,
+    };
+  }
+
+  function computeSchedule(sp, numPag) {
+    const netAnualAlvo = sp.net * numPag;
+    const grossAnual = grossAnnualFromNetTarget(netAnualAlvo, sp.sstrab, sp.dedA);
+    const grossPag = grossAnual / numPag;
+    const ssTrabAnual = grossAnual * sp.sstrab;
+    const colA = Math.max(0, grossAnual - ssTrabAnual - sp.dedA);
+    const irsAnual = irs(colA);
+    const netAnual = grossAnual - ssTrabAnual - irsAnual;
+    const ssPatAnual = grossAnual * sp.sspat;
+    const custoSalarialAnual = grossAnual + ssPatAnual;
+    return { numPag, netAnual, grossAnual, grossPag, ssTrabAnual, colA, irsAnual, ssPatAnual, custoSalarialAnual };
+  }
+
+  function computeSubsidio(sp) {
+    const isentoDiario = sp.summ === 'cartao' ? sp.iscartao : sp.isdinheiro;
+    const excedenteDiario = Math.max(0, sp.subd - isentoDiario);
+    const isentoMensal = Math.min(sp.subd, isentoDiario) * sp.dias;
+    const excedenteMensal = excedenteDiario * sp.dias;
+    const totalMensal = sp.subd * sp.dias;
+    const isentoAnual = isentoMensal * sp.meses;
+    const excedenteAnual = excedenteMensal * sp.meses;
+    const totalAnual = totalMensal * sp.meses;
+    const ssPatExcedente = excedenteAnual * sp.sspat;
+    return { isentoDiario, excedenteDiario, isentoMensal, excedenteMensal, totalMensal, isentoAnual, excedenteAnual, totalAnual, ssPatExcedente };
+  }
+
+  function rowS(label, val, cls) { return `<tr class="${cls || ''}"><td>${label}</td><td class="mono">${val}</td></tr>`; }
+
+  const msvg = $('mchart'), mtip = $('mtip');
+  const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+  function renderMonthlyChart(sp, chosenNumPag, subLiqMensalMedia) {
+    const salBars = Array(12).fill(sp.net);
+    if (chosenNumPag === 14) { salBars[5] = sp.net * 2; salBars[11] = sp.net * 2; }
+    const subBars = Array(12).fill(Math.max(0, subLiqMensalMedia));
+
+    const W = 860, H = 260, ML = 60, MR = 20, MT = 14, MB = 30;
+    const totals = salBars.map((v, i) => v + subBars[i]);
+    const ymax0 = Math.max(...totals);
+    const stepY = ymax0 > 6000 ? 2000 : ymax0 > 3000 ? 1000 : 500;
+    const ymax = Math.ceil(ymax0 / stepY) * stepY;
+    const y = v => MT + (ymax - v) / ymax * (H - MT - MB);
+    const bw = (W - ML - MR) / 12;
+    const gap = 2;
+
+    let g = '';
+    for (let v = 0; v <= ymax; v += stepY) {
+      g += `<line class="grid" x1="${ML}" x2="${W - MR}" y1="${y(v)}" y2="${y(v)}"/>`;
+      g += `<text x="${ML - 8}" y="${y(v) + 4}" text-anchor="end">${(v / 1000).toLocaleString('pt-PT', { maximumFractionDigits: 1 })} k€</text>`;
+    }
+    for (let i = 0; i < 12; i++) {
+      const bx = ML + i * bw;
+      const bwi = bw - 8;
+      const salH = (H - MT - MB) - (y(salBars[i]) - MT);
+      const subH = (H - MT - MB) - (y(subBars[i]) - MT);
+      g += `<rect class="bar-sal" x="${bx + 4}" y="${y(salBars[i])}" width="${bwi}" height="${salH}" rx="2"/>`;
+      if (subBars[i] > 0.5) g += `<rect class="bar-sub" x="${bx + 4}" y="${y(salBars[i] + subBars[i])}" width="${bwi}" height="${Math.max(0, subH - gap)}" rx="2"/>`;
+      g += `<text x="${bx + bw / 2}" y="${H - MB + 16}" text-anchor="middle">${MONTHS[i]}</text>`;
+      g += `<rect class="hitm" data-i="${i}" x="${bx}" y="${MT}" width="${bw}" height="${H - MT - MB}" fill="transparent"/>`;
+    }
+    msvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    msvg.innerHTML = g;
+
+    msvg.querySelectorAll('.hitm').forEach(el => {
+      el.addEventListener('mousemove', ev => {
+        const i = +el.dataset.i;
+        mtip.innerHTML = `<div class="t">${MONTHS[i]}</div><div class="r"><span><i style="background:var(--emp)"></i>Salário</span><span class="mono">${eur(salBars[i])}</span></div><div class="r"><span><i style="background:var(--sal-sub)"></i>Subsídio</span><span class="mono">${eur(subBars[i])}</span></div><div class="r"><span>Total</span><span class="mono">${eur(salBars[i] + subBars[i])}</span></div>`;
+        const wrap = msvg.parentElement.getBoundingClientRect();
+        let tx = ev.clientX - wrap.left + 14, ty = ev.clientY - wrap.top - 10;
+        if (tx + 190 > wrap.width) tx = ev.clientX - wrap.left - 200;
+        mtip.style.left = tx + 'px'; mtip.style.top = ty + 'px'; mtip.style.opacity = 1;
+      });
+      el.addEventListener('mouseleave', () => { mtip.style.opacity = 0; });
+    });
+  }
+
+  function updateSalary() {
+    const sp = salParams();
+    $('sal2-net-v').textContent = eur(sp.net);
+    $('sal2-subd-v').textContent = eur2(sp.subd) + '/dia';
+    $('sal2-dias-v').textContent = sp.dias + ' dias';
+    $('sal2-meses-v').textContent = sp.meses + ' meses';
+
+    const chosenNumPag = sp.sched === '14' ? 14 : 12;
+    const res12 = computeSchedule(sp, 12);
+    const res14 = computeSchedule(sp, 14);
+    const chosen = chosenNumPag === 14 ? res14 : res12;
+    const sub = computeSubsidio(sp);
+    const mRate = marginalRate(chosen.colA);
+    const subLiqMensal = sub.isentoMensal + sub.excedenteMensal * (1 - sp.sstrab) * (1 - mRate);
+
+    $('h-bruto').textContent = eur(chosen.grossPag);
+    $('h-custo').textContent = eur(chosen.custoSalarialAnual + sub.totalAnual + sub.ssPatExcedente);
+    $('h-liq').textContent = eur(sp.net + subLiqMensal);
+
+    const salSlider = $('sal');
+    const currentSal = parseFloat(salSlider.value) || 0;
+    const targetClamped = Math.min(6000, Math.max(0, Math.round(chosen.grossPag / 50) * 50));
+    const inSync = Math.abs(currentSal - targetClamped) < 1;
+    const lockBtn = $('lock-sal'), lockStatus = $('lock-status');
+    lockBtn.textContent = inSync ? 'Salário fixado no comparador' : 'Usar este salário no comparador';
+    lockBtn.classList.toggle('done', inSync);
+    if (chosen.grossPag > 6000) {
+      lockStatus.textContent = `Acima do máximo do simulador (6.000 €/mês) — será fixado em 6.000 €.`;
+    } else {
+      lockStatus.textContent = inSync
+        ? `A aba "Recibos verdes vs. empresa" já usa este salário (${eur(currentSal)}/mês).`
+        : `Essa aba está a usar ${eur(currentSal)}/mês.`;
+    }
+
+    $('t-sched-12').innerHTML =
+      rowS('Bruto por pagamento', eur(res12.grossPag)) +
+      rowS('Pagamentos por ano', res12.numPag) +
+      rowS('Bruto anual', eur(res12.grossAnual)) +
+      rowS('SS patronal anual', eur(res12.ssPatAnual)) +
+      rowS('Custo salarial anual p/ empresa', eur(res12.custoSalarialAnual), 'total');
+    $('t-sched-14').innerHTML =
+      rowS('Bruto por pagamento', eur(res14.grossPag)) +
+      rowS('Pagamentos por ano', res14.numPag) +
+      rowS('Bruto anual', eur(res14.grossAnual)) +
+      rowS('SS patronal anual', eur(res14.ssPatAnual)) +
+      rowS('Custo salarial anual p/ empresa', eur(res14.custoSalarialAnual), 'total');
+    $('tag-12').textContent = chosenNumPag === 12 ? 'Escolhida' : '';
+    $('tag-14').textContent = chosenNumPag === 14 ? 'Escolhida' : '';
+    $('sched-12').classList.toggle('pick', chosenNumPag === 12);
+    $('sched-14').classList.toggle('pick', chosenNumPag === 14);
+    $('mchart-sub').textContent = chosenNumPag === 12
+      ? `Duodécimos: recebes ${eur(sp.net)} + subsídio todos os meses, sem bónus em junho/dezembro.`
+      : `14 meses: recebes ${eur(sp.net)} + subsídio em 10 meses normais, e o dobro em junho e dezembro (salário + subsídio de férias/Natal).`;
+
+    $('t-sub').innerHTML =
+      rowS('Valor diário', eur2(sp.subd)) +
+      rowS('Valor mensal total', eur(sub.totalMensal)) +
+      rowS('— isento de IRS e SS', eur(sub.isentoMensal)) +
+      (sub.excedenteMensal > 0
+        ? rowS('— excedente (tributado como salário)', eur(sub.excedenteMensal), 'neg')
+        : rowS('— excedente', '— nenhum, está dentro do limite isento')) +
+      rowS('Custo anual para a empresa', eur(sub.totalAnual + sub.ssPatExcedente), 'total');
+
+    const multiplier = (1 - sp.sstrab) * (1 - mRate);
+    const grossEquiv = multiplier > 0 ? sub.isentoAnual / multiplier : 0;
+    const custoEquivSalario = grossEquiv * (1 + sp.sspat);
+    const poupanca = custoEquivSalario - sub.isentoAnual;
+    $('sub-save').textContent = poupanca > 100
+      ? `A empresa poupa ${eur(poupanca)}/ano ao dar-te isto como subsídio em vez de salário equivalente.`
+      : 'Com este valor diário a poupança é residual.';
+    $('t-sub-vs-sal').innerHTML =
+      rowS('Líquido que o subsídio isento te dá', eur(sub.isentoAnual)) +
+      rowS('Bruto de salário equivalente necessário', eur(grossEquiv)) +
+      rowS('Custo à empresa desse salário (+SS patronal)', eur(custoEquivSalario), 'neg') +
+      rowS('Poupança anual da empresa', eur(poupanca), 'total');
+
+    renderMonthlyChart(sp, chosenNumPag, subLiqMensal);
+  }
+
+  document.querySelectorAll('#tab-salary input, #tab-salary select').forEach(el => el.addEventListener('input', updateSalary));
+
+  $('lock-sal').addEventListener('click', () => {
+    const sp = salParams();
+    const chosenNumPag = sp.sched === '14' ? 14 : 12;
+    const grossPag = computeSchedule(sp, chosenNumPag).grossPag;
+    const target = Math.min(6000, Math.max(0, Math.round(grossPag / 50) * 50));
+    const salSlider = $('sal');
+    salSlider.value = target;
+    salSlider.dispatchEvent(new Event('input', { bubbles: true }));
+    updateSalary();
+  });
+  $('sal').addEventListener('input', updateSalary);
+  updateSalary();
+
+  /* ---------- tab switching ---------- */
+  const tabBtns = { compare: $('tabbtn-compare'), salary: $('tabbtn-salary') };
+  const tabPanels = { compare: $('tab-compare'), salary: $('tab-salary') };
+  function showTab(name) {
+    Object.keys(tabPanels).forEach(k => {
+      tabPanels[k].hidden = k !== name;
+      tabBtns[k].classList.toggle('active', k === name);
+      tabBtns[k].setAttribute('aria-selected', k === name ? 'true' : 'false');
+    });
+    if (name === 'salary') updateSalary();
+  }
+  tabBtns.compare.addEventListener('click', () => showTab('compare'));
+  tabBtns.salary.addEventListener('click', () => showTab('salary'));
+
+  /* ---------- print / export to PDF ---------- */
+  function paramRow(label, val) { return `<tr><td>${label}</td><td>${val}</td></tr>`; }
+
+  function buildCompareParams() {
+    const p = params();
+    const ativLabel = $('ativ').options[$('ativ').selectedIndex].text;
+    const rows = [
+      paramRow('Faturação bruta anual', eur(p.fat)),
+      paramRow('Despesas reais anuais', eur(p.desp)),
+      paramRow('Tipo de atividade', ativLabel),
+      paramRow('Primeiro ano de atividade (isenção SS)', p.ssex ? 'Sim' : 'Não'),
+      paramRow('Salário bruto mensal do gerente', eur(p.sal)),
+      paramRow('Lucro distribuído como dividendos', pct(p.div * 100)),
+      paramRow('Contabilista certificado (anual)', eur(p.cont)),
+      paramRow('Conta bancária empresarial (anual)', eur(p.banco)),
+      paramRow('Outros custos fixos da empresa (anual)', eur(p.outros)),
+      paramRow('SS trabalhador independente', pct(p.ssti * 100)),
+      paramRow('Dedução específica cat. B', eur(p.dedb)),
+      paramRow('IRC até 50 k€ (PME)', pct(p.irc1 * 100)),
+      paramRow('IRC acima de 50 k€', pct(p.irc2 * 100)),
+      paramRow('Derrama municipal', pct(p.der * 100)),
+      paramRow('Retenção sobre dividendos', pct(p.divr * 100)),
+      paramRow('SS patronal', pct(p.sspat * 100)),
+      paramRow('SS trabalhador (categoria A)', pct(p.sstrab * 100)),
+    ].join('');
+    $('print-params-compare').innerHTML = `<h3>Parâmetros usados nesta simulação</h3><table>${rows}</table>`;
+  }
+
+  function buildSalaryParams() {
+    const sp = salParams();
+    const summLabel = $('sal2-summ').options[$('sal2-summ').selectedIndex].text;
+    const schedLabel = $('sal2-sched').options[$('sal2-sched').selectedIndex].text;
+    const rows = [
+      paramRow('Líquido por pagamento mensal', eur(sp.net)),
+      paramRow('Modalidade de pagamento', schedLabel),
+      paramRow('Subsídio de alimentação — valor diário', eur2(sp.subd)),
+      paramRow('Modalidade do subsídio', summLabel),
+      paramRow('Dias úteis por mês', sp.dias),
+      paramRow('Meses de subsídio pagos por ano', sp.meses),
+      paramRow('Isenção cartão refeição', eur2(sp.iscartao) + '/dia'),
+      paramRow('Isenção dinheiro/transferência', eur2(sp.isdinheiro) + '/dia'),
+      paramRow('Dedução específica cat. A', eur(sp.dedA)),
+      paramRow('SS trabalhador', pct(sp.sstrab * 100)),
+      paramRow('SS patronal', pct(sp.sspat * 100)),
+    ].join('');
+    $('print-params-salary').innerHTML = `<h3>Parâmetros usados nesta simulação</h3><table>${rows}</table>`;
+  }
+
+  function preparePrint() {
+    const now = new Date();
+    const tabName = tabPanels.salary.hidden ? 'Recibos verdes vs. sociedade unipessoal' : 'Salário do gerente';
+    $('print-header').innerHTML =
+      `<div class="t1">Simulação fiscal — ${tabName}</div>` +
+      `<div class="t2">Exportado em ${now.toLocaleDateString('pt-PT')} às ${now.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })} · valores aproximados, para validação por contabilista certificado</div>`;
+    buildCompareParams();
+    buildSalaryParams();
+  }
+
+  window.addEventListener('beforeprint', preparePrint);
+  $('btn-print').addEventListener('click', () => { preparePrint(); window.print(); });
+})();
+</script>
+<a class="fab" href="mailto:info@sousadev.com?subject=Feedback%20%E2%80%94%20Simulador%20recibos%20verdes%20vs.%20empresa" data-vmtrc="Feedback" aria-label="Reportar um bug ou enviar feedback por email">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H7l-3 3z"/><path d="M8 9h8M8 12h5"/></svg>
+  <span>Bug ou feedback?</span>
+</a>
+</body>
+</html>
